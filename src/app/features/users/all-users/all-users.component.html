@@ -1,4 +1,4 @@
-<h2>Users</h2>
+<h2>Utilisateurs</h2>
 <table>
     <thead>
         <tr>
@@ -21,10 +21,10 @@
                 <td>{{user.email}}</td>
                 <td>{{user.firstName}}</td>
                 <td>{{user.lastName}}</td>
-                <td>{{user.birthDate | date:'EEEE d MMM y'}}</td>
+                <td>{{user.birthDate | date:'mediumDate'}}</td>
                 <td>{{user.role}}</td>
-                <td>{{user.signinDate | date:"medium"}}</td>
-                <td class="detail-td"><a [routerLink]="[user.id]">Détails</a></td>
+                <td>{{user.signinDate | date:"full"}}</td>
+                <td class="detail-td"><a [routerLink]="[user.id]">Page profil</a></td>
             </tr>
         }
     </tbody>

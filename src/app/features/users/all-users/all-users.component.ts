@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { User } from '../../models/user.interface';
+import { User } from '../../../models/user.interface';
 import { RouterLink } from '@angular/router';
 
 @Component({
-  selector: 'app-users',
+  selector: 'app-all-users',
   standalone: true,
   imports: [CommonModule, RouterLink],
-  templateUrl: './users.component.html',
-  styleUrl: './users.component.css'
+  templateUrl: './all-users.component.html',
+  styleUrl: './all-users.component.css'
 })
-export class UsersComponent {
+export class AllUsersComponent {
   users : Array<User> = [
     {
       "id": 1,

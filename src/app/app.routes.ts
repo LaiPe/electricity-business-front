@@ -1,14 +1,18 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './components/home/home.component';
-import { LoginComponent } from './components/login/login.component';
-import { RegisterComponent } from './components/register/register.component';
-import { UsersComponent } from './components/users/users.component';
+import { HomeComponent } from './features/home/home.component';
+import { LoginComponent } from './features/auth/login/login.component';
+import { RegisterComponent } from './features/auth/register/register.component';
+import { AllUsersComponent } from './features/users/all-users/all-users.component';
+import { ProfilePageComponent } from './features/users/profile-page/profile-page.component';
+import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
 
 export const routes: Routes = [
     {path: '', component: HomeComponent},
-    {path: 'users', component: UsersComponent},
     {path: 'login', component: LoginComponent},
     {path: 'register', component: RegisterComponent},
+    {path: 'users', component: AllUsersComponent},
+    {path: 'users/:id', component: ProfilePageComponent},
 
-    { path: '**', redirectTo: '' }// Route wildcard pour 404
+    { path: '404', component: PageNotFoundComponent },
+    { path: '**', redirectTo: '/404' }// Route wildcard pour 404
 ];

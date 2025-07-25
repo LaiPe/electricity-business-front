@@ -1,0 +1,11 @@
+<h2>Profil de {{user?.username}}</h2>
+
+<ul>
+    <li><b>Prénom :</b> {{user?.firstName}}</li>
+    <li><b>Nom de famille :</b> {{user?.lastName}}</li>
+    <li><b>Nom d'utilisateur :</b> {{user?.username}}</li>
+    <li><b>Email :</b> {{user?.email}}</li>
+    <li><b>Date de naissance :</b> {{user?.birthDate | date:'longDate'}}</li>
+    <li><b>Rôle :</b> {{user?.role}}</li>
+    <li><b>Date d'inscription :</b> {{user?.signinDate | date:'medium'}}</li>
+</ul>
