@@ -1,0 +1,31 @@
+<h2>Users</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th><b>Nom d'utilisateur</b></th>
+            <th>Email</th>
+            <th>Prénom</th>
+            <th>Nom</th>
+            <th>Date de naissance</th>
+            <th>Role</th>
+            <th>Date d'inscription</th>
+            <th class="detail-th"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (user of users; track user.id) {
+            <tr [ngClass]="{'banned': user.banned}">
+                <td>{{user.id}}</td>
+                <td><b>{{user.username}}</b></td>
+                <td>{{user.email}}</td>
+                <td>{{user.firstName}}</td>
+                <td>{{user.lastName}}</td>
+                <td>{{user.birthDate | date:"full"}}</td>
+                <td>{{user.role}}</td>
+                <td>{{user.signinDate}}</td>
+                <td class="detail-td"><a [routerLink]="[user.id]">Détails</a></td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -4,6 +4,7 @@
   "newProjectRoot": "projects",
   "projects": {
     "electricity-business-front": {
+      
       "projectType": "application",
       "schematics": {},
       "root": "",
