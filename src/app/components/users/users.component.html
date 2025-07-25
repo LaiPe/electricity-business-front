@@ -21,9 +21,9 @@
                 <td>{{user.email}}</td>
                 <td>{{user.firstName}}</td>
                 <td>{{user.lastName}}</td>
-                <td>{{user.birthDate | date:"full"}}</td>
+                <td>{{user.birthDate | date:'EEEE d MMM y'}}</td>
                 <td>{{user.role}}</td>
-                <td>{{user.signinDate}}</td>
+                <td>{{user.signinDate | date:"medium"}}</td>
                 <td class="detail-td"><a [routerLink]="[user.id]">Détails</a></td>
             </tr>
         }
