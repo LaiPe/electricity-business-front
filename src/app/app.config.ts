@@ -5,12 +5,14 @@ import { registerLocaleData } from '@angular/common';
 import localeFr from '@angular/common/locales/fr';
 
 import { routes } from './app.routes';
+import { provideHttpClient } from '@angular/common/http';
 
 
 registerLocaleData(localeFr);
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideHttpClient(),
     provideZoneChangeDetection({ eventCoalescing: true }), 
     provideRouter(routes), 
     provideClientHydration(),

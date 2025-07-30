@@ -14,5 +14,12 @@ import { UserService } from '../user.service';
 export class AllUsersComponent {
   private userService = inject(UserService);
   
-  users : Array<User> = this.userService.getUsers();
+  users : Array<User> | undefined;
+  
+  ngOnInit() {
+    this.userService.getUsers().subscribe({
+      next: (users) => this.users = users,
+      error: (error) => console.error('Erreur récupération users:', error)
+    });
+  }
 }

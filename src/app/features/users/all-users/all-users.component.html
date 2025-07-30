@@ -19,11 +19,11 @@
                 <td>{{user.id}}</td>
                 <td><b>{{user.username}}</b></td>
                 <td>{{user.email}}</td>
-                <td>{{user.firstName}}</td>
-                <td>{{user.lastName}}</td>
-                <td>{{user.birthDate | date:'mediumDate'}}</td>
+                <td>{{user.first_name}}</td>
+                <td>{{user.last_name}}</td>
+                <td>{{user.birth_date | date:'mediumDate'}}</td>
                 <td>{{user.role}}</td>
-                <td>{{user.signinDate | date:"full"}}</td>
+                <td>{{user.signin_date | date:"full"}}</td>
                 <td class="detail-td"><a [routerLink]="[user.id]">Page profil</a></td>
             </tr>
         }

@@ -38,7 +38,10 @@ export class ProfilePageComponent implements OnInit {
 
     this.userId = parseInt(userIdString, 10);
 
-    this.user = this.userService.getUserById(this.userId);
+    this.userService.getUserById(this.userId).subscribe({
+      next: user => this.user = user,
+      error: (error) => console.error('Erreur récupération users:', error)
+    });
 
     // Si aucun utilisateur ne correspond à l'id, rediriger vers une page 404
     if (!this.user) {
