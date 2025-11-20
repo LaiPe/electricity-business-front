@@ -1,0 +1,7 @@
+.hero-fullscreen-height {
+    min-height: calc(100vh - 76px);
+}
+
+.hero-fullscreen-height-minus-footer {
+    min-height: calc(100vh - 76px - 100px);
+}
