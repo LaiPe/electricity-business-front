@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { apiRequest } from '../../utils/ApiRequest';
-import Input from '../../components/form/Input';
 import Button from '../../components/form/Button';
+import Input from '../../components/form/Input';
 
 function Verify() {
     const [verificationCode, setVerificationCode] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [verified, setVerified] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isResending, setIsResending] = useState(false);
     const [codeError, setCodeError] = useState('');
@@ -17,8 +18,9 @@ function Verify() {
     const navigate = useNavigate();
     const location = useLocation();
     
-    // Récupérer l'email depuis l'état de navigation (si passé depuis Register)
+    // Récupérer l'email et la destination de redirection depuis l'état de navigation
     const email = location.state?.email || '';
+    const redirectTo = location.state?.redirectTo || '/dashboard';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -30,11 +32,12 @@ function Verify() {
             await apiRequest('/auth/verify', 'POST', Number(verificationCode));
             
             setSuccess('Votre compte a été vérifié avec succès !');
+            setVerified(true);
             
-            // Vérifier le statut d'authentification et rediriger
+            // Vérifier le statut d'authentification et rediriger vers la destination d'origine
             setTimeout(async () => {
                 await checkAuthStatus();
-                navigate('/dashboard', { replace: true });
+                navigate(redirectTo, { replace: true });
             }, 2000);
             
         } catch (err) {
@@ -98,14 +101,10 @@ function Verify() {
 
                     <form onSubmit={handleSubmit}>
                         <Input
-                            id="verificationCode"
                             name="verificationCode"
-                            type="text"
-                            label=""
                             value={verificationCode}
                             onChange={handleCodeChange}
                             error={codeError}
-                            placeholder=""
                             required
                             disabled={isSubmitting}
                             className="text-center"
@@ -120,7 +119,7 @@ function Verify() {
                         <Button
                             type="submit"
                             className="w-100 mb-3"
-                            disabled={codeError || verificationCode.length !== 6}
+                            disabled={codeError || verificationCode.length !== 6 || verified}
                             loading={isSubmitting}
                             loadingText="Vérification en cours..."
                         >

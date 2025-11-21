@@ -106,6 +106,7 @@ export function AuthProvider({ children }) {
         email : user?.email || null,
         isBanned : user?.banned || false,
         isVerified : user?.verified || false,
+        role : user?.role || 'USER',
         isAuthenticated,
         loading,
         initialLoading,
