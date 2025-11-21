@@ -142,12 +142,6 @@ function Verify() {
                         >
                             Renvoyer le code
                         </Button>
-                        
-                        <div>
-                            <Link to="/login" className="link-primary text-decoration-none">
-                                Retour à la connexion
-                            </Link>
-                        </div>
                     </div>
                 </div>
             </div>

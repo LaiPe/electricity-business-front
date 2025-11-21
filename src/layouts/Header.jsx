@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
 
 function Header() {
-    const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, username } = useAuth();
     const [isNavOpen, setIsNavOpen] = useState(false);
 
     const toggleNav = () => {
@@ -34,7 +34,7 @@ function Header() {
                         {isAuthenticated ? (
                             // Navigation pour utilisateur connecté
                             <>
-                                <span className='navbar-text me-2'>Bienvenue, {user.username}!</span>
+                                <span className='navbar-text me-2'>Bienvenue, {username}!</span>
                                 <li className='nav-item'>
                                     <NavLink to="/projects" className='nav-link' onClick={() => setIsNavOpen(false)}>Projets</NavLink>
                                 </li>

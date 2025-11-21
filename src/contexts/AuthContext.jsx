@@ -95,28 +95,17 @@ export function AuthProvider({ children }) {
         }
     };
 
-
-    // Fonction pour vérifier si l'utilisateur est vérifié
-    const isUserVerified = () => {
-        return user?.verified === true;
-    };
-
-    // Fonction pour obtenir des informations sur la vérification
-    const getVerificationInfo = () => {
-        return {
-            isVerified: user?.verified === true,
-            needsVerification: user && user?.verified === false,
-            email: user?.email
-        };
-    };
-
     // Vérifier l'authentification au montage du composant
     useEffect(() => {
         checkAuthStatus();
     }, []);
 
     const value = {
-        user,
+        userId : user?.id || null,
+        username : user?.username || null,
+        email : user?.email || null,
+        isBanned : user?.banned || false,
+        isVerified : user?.verified || false,
         isAuthenticated,
         loading,
         initialLoading,
@@ -124,8 +113,6 @@ export function AuthProvider({ children }) {
         logout,
         register,
         checkAuthStatus,
-        isUserVerified,
-        getVerificationInfo,
     };
 
     return (

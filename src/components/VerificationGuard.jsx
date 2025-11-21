@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 function VerificationGuard({ children }) {
-    const { user, isAuthenticated, loading, getVerificationInfo } = useAuth();
+    const { isAuthenticated, loading, isVerified, email } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -11,19 +11,16 @@ function VerificationGuard({ children }) {
         if (loading) return;
 
         // Ne pas rediriger si pas authentifié
-        if (!isAuthenticated || !user) return;
+        if (!isAuthenticated) return;
 
-        const verificationInfo = getVerificationInfo();
-        
         // Rediriger vers la vérification si l'utilisateur n'est pas vérifié
-        if (verificationInfo.needsVerification) {
+        if (!isVerified) {
             navigate('/verify', {
-                state: { email: verificationInfo.email },
+                state: { email },
                 replace: true
             });
         }
-    }, [user, isAuthenticated, loading, navigate, getVerificationInfo]);
-
+    }, [isAuthenticated, loading, navigate, isVerified, email]);
     return children;
 }
 
