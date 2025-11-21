@@ -11,8 +11,13 @@ export const PUBLIC_ROUTES = [
 
 // Routes accessibles aux utilisateurs authentifiés mais non vérifiés
 export const UNVERIFIED_USER_ROUTES = [
-    ...PUBLIC_ROUTES,
     '/verify',
+    '/logout'
+];
+
+export const BANNED_USER_ROUTES = [
+    ...PUBLIC_ROUTES,
+    '/banned',
     '/logout'
 ];
 
@@ -22,10 +27,9 @@ export const VERIFIED_USER_ROUTES = [
     '/profile',
     '/settings',
     '/projects*', // Wildcard pour toutes les routes commençant par /projects
-    '/admin*'     // Wildcard pour toutes les routes d'admin
 ];
 
-// Routes protégées par rôle (optionnel pour plus tard)
+// Routes protégées par rôle
 export const ADMIN_ROUTES = [
     '/admin*'
 ];
@@ -42,18 +46,37 @@ export const isRouteAllowed = (currentPath, allowedRoutes) => {
 };
 
 // Fonction pour obtenir les routes autorisées selon le statut de l'utilisateur
-export const getAllowedRoutes = (isAuthenticated, isVerified, userRole = 'USER') => {
+export const getAllowedRoutes = (isAuthenticated, isVerified, isBanned, userRole = 'USER') => {
     if (!isAuthenticated) {
         return PUBLIC_ROUTES;
     }
+
+    if (isBanned) {
+        return [...PUBLIC_ROUTES, ...BANNED_USER_ROUTES];
+    }
     
     if (!isVerified) {
-        return UNVERIFIED_USER_ROUTES;
+        return [...PUBLIC_ROUTES, ...UNVERIFIED_USER_ROUTES];
     }
-    
+
     if (userRole === 'ADMIN') {
-        return [...VERIFIED_USER_ROUTES, ...ADMIN_ROUTES];
+        return [
+            ...PUBLIC_ROUTES, 
+            ...UNVERIFIED_USER_ROUTES,
+            ...VERIFIED_USER_ROUTES, 
+            ...ADMIN_ROUTES
+        ];
     }
     
-    return VERIFIED_USER_ROUTES;
+    return [...PUBLIC_ROUTES, ...UNVERIFIED_USER_ROUTES, ...VERIFIED_USER_ROUTES];
+};
+
+export const getAllRoutes = () => {
+    return [
+        ...PUBLIC_ROUTES,
+        ...UNVERIFIED_USER_ROUTES,
+        ...BANNED_USER_ROUTES,
+        ...VERIFIED_USER_ROUTES,
+        ...ADMIN_ROUTES
+    ];
 };

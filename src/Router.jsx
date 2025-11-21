@@ -3,17 +3,20 @@ import { useEffect } from 'react';
 import Header from './layouts/Header.jsx';
 import Footer from './layouts/Footer.jsx';
 
-import ErrorPage from './pages/ErrorPage.jsx';
+import ErrorPage from './pages/navigation/ErrorPage.jsx';
 import Register from './pages/auth/Register.jsx';
 import Login from './pages/auth/Login.jsx';
 import Verify from './pages/auth/Verify.jsx';
 import Home from './pages/Home.jsx';
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 import TermsOfService from './pages/TermsOfService.jsx';
+import BannedPage from './pages/navigation/BannedPage.jsx';
+import UnauthorizedPage from './pages/navigation/UnauthorizedPage.jsx';
+import Dashboard from './pages/Dashboard.jsx';
 
 import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
 import Spinner from './components/spinner/Spinner.jsx';
-import VerificationGuard from './components/VerificationGuard.jsx';
+import RouteGuard from './RouteGuard.jsx';
 
 const router = createBrowserRouter([
   {
@@ -48,21 +51,23 @@ const router = createBrowserRouter([
       {
         path: '/terms-of-service',
         element: <TermsOfService />
+      },
+      {
+        path: '/banned',
+        element: <BannedPage />
+      },
+      {
+        path: '/unauthorized',
+        element: <UnauthorizedPage />
+      },
+      {
+        path: '/dashboard',
+        element: <Dashboard />
       }
     ]
   }
 ]);
 
-// Composant pour les routes protégées
-function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useAuth();
-  if (!isAuthenticated) {
-    // Rediriger vers la page de connexion ou afficher un message
-    return <Navigate to="/" replace />;
-  }
-  
-  return children;
-}
 
 function Root({children}) {
   const { state } = useNavigation();
@@ -72,13 +77,13 @@ function Root({children}) {
     return <Spinner />;
   } else {
     return (
-      <VerificationGuard>
+      <RouteGuard>
         <Header />
         <main>
           {state === 'loading' ? <Spinner /> : children}
         </main>
         <Footer />
-      </VerificationGuard>
+      </RouteGuard>
     );
   }
 }
