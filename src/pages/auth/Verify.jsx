@@ -29,7 +29,7 @@ function Verify() {
         setIsSubmitting(true);
 
         try {
-            await apiRequest('/auth/verify', 'POST', Number(verificationCode));
+            await apiRequest('/auth/verify', 'POST', { "verification_code": verificationCode });
             
             setSuccess('Votre compte a été vérifié avec succès !');
             setVerified(true);
