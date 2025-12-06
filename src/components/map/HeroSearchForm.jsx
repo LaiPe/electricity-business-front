@@ -87,7 +87,7 @@ function HeroSearchForm({
             
             {searchResults.length === 0 && !isSearching && searchCoordinates && !searchError && (
                 <div className="alert alert-warning mt-3 mb-0" role="alert">
-                    ⚠️ Aucune borne disponible pour cette recherche
+                    ⚠️ Aucune borne disponible
                 </div>
             )}
             

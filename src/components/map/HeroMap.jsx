@@ -43,8 +43,24 @@ function HeroMap() {
     const [searchCoordinates, setSearchCoordinates] = useState(null);
     const [selectedStation, setSelectedStation] = useState(null);
 
+    const getFilteredStations = async (lat, lng, radius) => {
+        const stations = await getNearbyStations(
+            parseFloat(lat.toFixed(8)), // Reduire les décimales à 8
+            parseFloat(lng.toFixed(8)),
+            Math.ceil(radius) // Arrondir vers le haut pour inclure toutes les stations
+        );
+        
+        // Filtrer les stations pour ne garder que celles dans les limites visibles
+        const boundsFilter = createStationBoundsFilter(mapRef);
+        return stations.filter(boundsFilter);
+        
+    };
+
     // Fonction pour mettre à jour les stations visibles selon la carte
     const updateVisibleStations = useCallback(async () => {
+        setIsSearching(true);
+        setSearchError(null);
+
         if (mapRef.current) {
             const center = mapRef.current.getCenter();
             const radius = calculateVisibleRadius(mapRef);
@@ -55,18 +71,13 @@ function HeroMap() {
             });
             
             try {
-                const stations = await getNearbyStations(
-                    parseFloat(center.lat.toFixed(8)), // Reduire les décimales à 8
-                    parseFloat(center.lng.toFixed(8)),
-                    Math.ceil(radius) // Arrondir vers le haut pour inclure toutes les stations
-                );
-                
-                // Filtrer les stations pour ne garder que celles dans les limites visibles
-                const boundsFilter = createStationBoundsFilter(mapRef);
-                const filteredStations = stations.filter(boundsFilter);
+                const filteredStations = await getFilteredStations(center.lat, center.lng, radius);
                 setSearchResults(filteredStations);
             } catch (error) {
                 console.error('Erreur lors de la mise à jour des stations:', error);
+                setSearchError('Erreur lors de la mise à jour des stations');
+            } finally {
+                setIsSearching(false);
             }
         }
     }, []);
@@ -85,7 +96,6 @@ function HeroMap() {
     const handleSearchSubmit = async (searchForm) => {
         setIsSearching(true);
         setSearchError(null);
-        setSearchResults([]);
 
         try {
             // 1. Géocodage de l'adresse
@@ -97,31 +107,11 @@ function HeroMap() {
                     longitude: geocodingResult.longitude
                 };
                 setSearchCoordinates(coordinates);
-            } else if (locationStatus === 'success' && userLocation) {
-                // Utiliser la position de l'utilisateur si pas d'adresse
-                coordinates = {
-                    latitude: userLocation.latitude,
-                    longitude: userLocation.longitude
-                };
-                setSearchCoordinates(coordinates);
             } else {
                 throw new Error('Aucune adresse fournie et géolocalisation indisponible');
             }
 
-            // 3. Appel à l'API backend pour récupérer les bornes autour des coordonnées
-            const stations = await getNearbyStations(
-                coordinates.latitude,
-                coordinates.longitude,
-                10, // 10km de rayon par défaut
-            );
-            
-            // Filtrer les stations pour ne garder que celles dans les limites visibles (si la carte est prête)
-            const filteredStations = mapRef.current 
-                ? stations.filter(createStationBoundsFilter(mapRef))
-                : stations;
-            setSearchResults(filteredStations);
-
-            // Centrer la carte sur les coordonnées de recherche
+            // 2. Centrer la carte sur les coordonnées de recherche
             if (coordinates && mapRef.current) {
                 mapRef.current.flyTo({center: [coordinates.longitude, coordinates.latitude]});
             }
@@ -129,8 +119,6 @@ function HeroMap() {
         } catch (error) {
             console.error('Erreur lors de la recherche:', error);
             setSearchError(error.message || 'Erreur lors de la recherche de bornes');
-        } finally {
-            setIsSearching(false);
         }
     };
     // Si la géolocalisation n'est pas encore disponible, afficher le spinner
