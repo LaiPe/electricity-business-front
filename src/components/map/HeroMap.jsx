@@ -1,6 +1,6 @@
 import {Map, Marker, Popup, ScaleControl} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Spinner from '../spinner/Spinner';
 import HeroSearchForm from './HeroSearchForm';
 import GeolocationButton from '../form/GeolocationButton';
@@ -8,6 +8,7 @@ import ZoomControl from './ZoomControl';
 import { getNearbyStations } from '../../services/StationService';
 import { geocodeAddress } from '../../services/GeoService';
 import { useGeolocation } from '../../hooks/useGeolocation';
+import { calculateVisibleRadius, debounce, createStationBoundsFilter } from '../../utils/MapUtils';
 
 /**
  * Composant Hero Map avec carte interactive et formulaire de recherche
@@ -42,6 +43,44 @@ function HeroMap() {
     const [searchCoordinates, setSearchCoordinates] = useState(null);
     const [selectedStation, setSelectedStation] = useState(null);
 
+    // Fonction pour mettre à jour les stations visibles selon la carte
+    const updateVisibleStations = useCallback(async () => {
+        if (mapRef.current) {
+            const center = mapRef.current.getCenter();
+            const radius = calculateVisibleRadius(mapRef);
+            
+            console.log('Mise à jour des stations:', {
+                centre: { lat: center.lat, lng: center.lng },
+                rayon: radius + 'km'
+            });
+            
+            try {
+                const stations = await getNearbyStations(
+                    parseFloat(center.lat.toFixed(8)), // Reduire les décimales à 8
+                    parseFloat(center.lng.toFixed(8)),
+                    Math.ceil(radius) // Arrondir vers le haut pour inclure toutes les stations
+                );
+                
+                // Filtrer les stations pour ne garder que celles dans les limites visibles
+                const boundsFilter = createStationBoundsFilter(mapRef);
+                const filteredStations = stations.filter(boundsFilter);
+                setSearchResults(filteredStations);
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour des stations:', error);
+            }
+        }
+    }, []);
+
+    // Debouncer la fonction pour éviter trop d'appels API
+    const debouncedUpdateStations = useCallback(
+        debounce(updateVisibleStations, 500),
+        [updateVisibleStations]
+    );
+
+    const handleMapMovement = () => {
+        debouncedUpdateStations();
+    };
+
     // Soumission du formulaire
     const handleSearchSubmit = async (searchForm) => {
         setIsSearching(true);
@@ -75,7 +114,12 @@ function HeroMap() {
                 coordinates.longitude,
                 10, // 10km de rayon par défaut
             );
-            setSearchResults(stations);
+            
+            // Filtrer les stations pour ne garder que celles dans les limites visibles (si la carte est prête)
+            const filteredStations = mapRef.current 
+                ? stations.filter(createStationBoundsFilter(mapRef))
+                : stations;
+            setSearchResults(filteredStations);
 
             // Centrer la carte sur les coordonnées de recherche
             if (coordinates && mapRef.current) {
@@ -104,6 +148,8 @@ function HeroMap() {
                 mapStyle="https://api.maptiler.com/maps/streets/style.json?key=x8wLPu6vQFH77llyCUjo"
                 scrollZoom={false}
                 doubleClickZoom={true}
+                onMove={handleMapMovement}
+                onZoom={handleMapMovement}
             >
                 
                 {/* Marqueurs pour les stations trouvées */}
