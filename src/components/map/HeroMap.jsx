@@ -1,9 +1,10 @@
 import {Map, Marker, Popup} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Spinner from '../spinner/Spinner';
-import SearchForm from './SearchForm';
-import { getNearbyAndFreeStations } from '../../services/StationService';
+import HeroSearchForm from './HeroSearchForm';
+import GeolocationButton from '../form/GeolocationButton';
+import { getNearbyStations } from '../../services/StationService';
 import { geocodeAddress } from '../../services/GeoService';
 import { useGeolocation } from '../../hooks/useGeolocation';
 
@@ -12,7 +13,13 @@ import { useGeolocation } from '../../hooks/useGeolocation';
  */
 function HeroMap() {
     const mapRef = useRef();
-    const { userLocation, locationStatus } = useGeolocation();
+    const { userLocation, locationStatus, getUserLocation } = useGeolocation();
+
+    useEffect(() => {  
+        if (mapRef.current && userLocation) {
+            mapRef.current.flyTo({center: [userLocation.longitude, userLocation.latitude]});
+        }
+    }, [userLocation]);
     
     // États pour les résultats de recherche
     const [isSearching, setIsSearching] = useState(false);
@@ -48,21 +55,11 @@ function HeroMap() {
                 throw new Error('Aucune adresse fournie et géolocalisation indisponible');
             }
 
-            // 2. Calcul des dates de début et fin
-            const startDate = new Date(searchForm.startDate);
-            const endDate = new Date(startDate);
-            endDate.setHours(startDate.getHours() + parseFloat(searchForm.duration));
-
-            const searchStart = startDate.toISOString();
-            const searchEnd = endDate.toISOString();
-
-            // 3. Appel à l'API backend pour récupérer les bornes disponibles
-            const stations = await getNearbyAndFreeStations(
+            // 3. Appel à l'API backend pour récupérer les bornes autour des coordonnées
+            const stations = await getNearbyStations(
                 coordinates.latitude,
                 coordinates.longitude,
                 10, // 10km de rayon par défaut
-                searchStart,
-                searchEnd
             );
             setSearchResults(stations);
 
@@ -79,7 +76,7 @@ function HeroMap() {
         }
     };
     // Si la géolocalisation n'est pas encore disponible, afficher le spinner
-    if (locationStatus !== 'success' || !userLocation) {
+    if (!userLocation) {
         return <Spinner />;
     }
 
@@ -181,21 +178,25 @@ function HeroMap() {
 
             {/* Content Container */}
             <div className='container-fluid position-absolute top-0 start-0 w-100 h-100' style={{zIndex: 2, pointerEvents: 'none'}}>
-                <div className='row h-100' style={{pointerEvents: 'none'}}>
-                    <div className='col-lg-5 d-flex flex-column justify-content-evenly' style={{pointerEvents: 'auto'}}>
-                        <div className="hero-content">
+                <div className='row h-100'>
+                    <div className='col-lg-5 d-flex flex-column justify-content-between py-4' style={{pointerEvents: 'none'}}>
+                        <div className="hero-content" style={{pointerEvents: 'auto'}}>
                             <h1 className="fw-bold mb-4">
                                 ⚡Trouvez, réservez et gérez vos bornes de recharge en toute simplicité.
                             </h1>
                         </div>
-                        
-                        <SearchForm 
-                            onSubmit={handleSearchSubmit}
-                            isSearching={isSearching}
-                            searchError={searchError}
-                            searchResults={searchResults}
-                            searchCoordinates={searchCoordinates}
-                        />
+
+                        <div className='d-flex gap-2 flex-column'>
+                            {locationStatus !== 'error' && <GeolocationButton onClick={getUserLocation} />}
+                            <HeroSearchForm 
+                                onSubmit={handleSearchSubmit}
+                                isSearching={isSearching}
+                                searchError={searchError}
+                                searchResults={searchResults}
+                                searchCoordinates={searchCoordinates}
+                                style={{pointerEvents: 'auto'}}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

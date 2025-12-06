@@ -9,18 +9,17 @@ import { useState } from 'react';
  * @param {Array} props.searchResults - Résultats de la recherche
  * @param {Object} props.searchCoordinates - Coordonnées de la recherche
  */
-function SearchForm({ 
+function HeroSearchForm({ 
     onSubmit, 
     isSearching = false, 
     searchError = null, 
     searchResults = [], 
-    searchCoordinates = null 
+    searchCoordinates = null,
+    ...props
 }) {
     // États pour le formulaire de recherche
     const [searchForm, setSearchForm] = useState({
         address: '',
-        startDate: '',
-        duration: '1'
     });
 
     // Gestion des changements dans le formulaire
@@ -41,7 +40,7 @@ function SearchForm({
     };
 
     return (
-        <form onSubmit={handleSubmit} className="search-form bg-white bg-opacity-90 p-4 rounded shadow">
+        <form onSubmit={handleSubmit} className="search-form bg-white bg-opacity-90 p-4 rounded shadow" {...props}>
             {/* Adresse postale */}
             <div className="mb-3">
                 <label htmlFor="address" className="form-label text-dark fw-semibold">
@@ -57,47 +56,6 @@ function SearchForm({
                     placeholder="Ex: 123 Rue de Rivoli, Paris"
                     required
                 />
-            </div>
-
-            {/* Date de début */}
-            <div className="mb-3">
-                <label htmlFor="startDate" className="form-label text-dark fw-semibold">
-                    📅 Date et heure de début
-                </label>
-                <input
-                    type="datetime-local"
-                    className="form-control"
-                    id="startDate"
-                    name="startDate"
-                    value={searchForm.startDate}
-                    onChange={handleInputChange}
-                    min={new Date().toISOString().slice(0, 16)}
-                    required
-                />
-            </div>
-
-            {/* Durée de réservation */}
-            <div className="mb-3">
-                <label htmlFor="duration" className="form-label text-dark fw-semibold">
-                    ⏰ Durée de réservation
-                </label>
-                <select
-                    className="form-select"
-                    id="duration"
-                    name="duration"
-                    value={searchForm.duration}
-                    onChange={handleInputChange}
-                    required
-                >
-                    <option value="0.5">30 minutes</option>
-                    <option value="1">1 heure</option>
-                    <option value="1.5">1h 30</option>
-                    <option value="2">2 heures</option>
-                    <option value="3">3 heures</option>
-                    <option value="4">4 heures</option>
-                    <option value="6">6 heures</option>
-                    <option value="8">8 heures</option>
-                </select>
             </div>
 
             {/* Bouton de recherche */}
@@ -141,4 +99,4 @@ function SearchForm({
     );
 }
 
-export default SearchForm;
+export default HeroSearchForm;

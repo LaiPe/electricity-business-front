@@ -7,10 +7,17 @@ export const useGeolocation = () => {
 
     const getUserLocation = useCallback(() => {
         setLocationStatus('loading');
+
+        const fallbackLocation = {
+            latitude: 48.8566, // Paris coordinates
+            longitude: 2.3522,
+            zoom: 12
+        };
         
         if (!navigator.geolocation) {
             setLocationStatus('error');
             setLocationError('La géolocalisation n\'est pas supportée par ce navigateur');
+            setUserLocation(fallbackLocation);
             return;
         }
 
@@ -34,11 +41,11 @@ export const useGeolocation = () => {
             (error) => {
                 console.error('Erreur de géolocalisation:', error);
                 setLocationStatus('error');
+                setUserLocation(fallbackLocation);
                 
                 switch (error.code) {
                     case error.PERMISSION_DENIED:
                         setLocationError('Accès à la géolocalisation refusé');
-                        setLocationStatus('denied');
                         break;
                     case error.POSITION_UNAVAILABLE:
                         setLocationError('Position indisponible');
@@ -55,35 +62,6 @@ export const useGeolocation = () => {
         );
     }, []);
 
-    // Fonction pour redemander la géolocalisation
-    const retryGeolocation = useCallback(() => {
-        setLocationStatus('loading');
-        
-        const options = {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0 // Force une nouvelle position
-        };
-
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                setUserLocation({
-                    longitude,
-                    latitude,
-                    zoom: 14
-                });
-                setLocationStatus('success');
-                setLocationError(null);
-            },
-            (error) => {
-                setLocationStatus('error');
-                setLocationError('Impossible d\'obtenir votre position');
-            },
-            options
-        );
-    }, []);
-
     // Récupération de la géolocalisation au montage
     useEffect(() => {
         getUserLocation();
@@ -93,7 +71,6 @@ export const useGeolocation = () => {
         userLocation,
         locationStatus,
         locationError,
-        getUserLocation,
-        retryGeolocation
+        getUserLocation
     };
 };
