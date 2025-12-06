@@ -1,9 +1,10 @@
-import {Map, Marker, Popup} from 'react-map-gl/maplibre';
+import {Map, Marker, Popup, ScaleControl} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useState, useRef, useEffect } from 'react';
 import Spinner from '../spinner/Spinner';
 import HeroSearchForm from './HeroSearchForm';
 import GeolocationButton from '../form/GeolocationButton';
+import ZoomControl from './ZoomControl';
 import { getNearbyStations } from '../../services/StationService';
 import { geocodeAddress } from '../../services/GeoService';
 import { useGeolocation } from '../../hooks/useGeolocation';
@@ -20,6 +21,19 @@ function HeroMap() {
             mapRef.current.flyTo({center: [userLocation.longitude, userLocation.latitude]});
         }
     }, [userLocation]);
+
+    // Fonctions de contrôle du zoom
+    const handleZoomIn = () => {
+        if (mapRef.current) {
+            mapRef.current.zoomIn();
+        }
+    };
+
+    const handleZoomOut = () => {
+        if (mapRef.current) {
+            mapRef.current.zoomOut();
+        }
+    };
     
     // États pour les résultats de recherche
     const [isSearching, setIsSearching] = useState(false);
@@ -88,7 +102,10 @@ function HeroMap() {
                 initialViewState={userLocation}
                 style={{width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 0}}
                 mapStyle="https://api.maptiler.com/maps/streets/style.json?key=x8wLPu6vQFH77llyCUjo"
+                scrollZoom={false}
+                doubleClickZoom={true}
             >
+                
                 {/* Marqueurs pour les stations trouvées */}
                 {searchResults.map((station) => (
                     <Marker
@@ -160,6 +177,12 @@ function HeroMap() {
                         </div>
                     </Popup>
                 )}
+                
+                {/* Contrôles de zoom personnalisés */}
+                <ZoomControl 
+                    onZoomIn={handleZoomIn}
+                    onZoomOut={handleZoomOut}
+                />
             </Map>
 
             <div 
