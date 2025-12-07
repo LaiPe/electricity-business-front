@@ -6,7 +6,7 @@ import HeroSearchForm from './HeroSearchForm';
 import GeolocationButton from '../form/GeolocationButton';
 import ZoomControl from './ZoomControl';
 import { getNearbyStations } from '../../services/StationService';
-import { geocodeAddress } from '../../services/GeoService';
+import { geocodeAddress, getShortAddress } from '../../services/GeoService';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { calculateVisibleRadius, debounce, createStationBoundsFilter } from '../../utils/MapUtils';
 
@@ -43,6 +43,32 @@ function HeroMap() {
     const [searchCoordinates, setSearchCoordinates] = useState(null);
     const [selectedStation, setSelectedStation] = useState(null);
 
+    // Fonction pour enrichir les stations avec des adresses
+    const enrichStationsWithAddresses = async (stations) => {
+        console.log('Enrichissement des adresses pour', stations.length, 'stations');
+        try {
+            // Enrichir toutes les stations en parallèle avec Promise.all
+            const enrichedStations = await Promise.all(
+                stations.map(async (station) => {
+                    try {
+                        console.log('Récupération adresse pour station:', station.name);
+                        const address = await getShortAddress(station.latitude, station.longitude);
+                        console.log('Adresse récupérée:', address);
+                        return { ...station, address };
+                    } catch (error) {
+                        console.error('Erreur lors de l\'enrichissement de l\'adresse pour la station:', station.id, error);
+                        return { ...station, address: 'Adresse non disponible' };
+                    }
+                })
+            );
+            console.log('Stations enrichies:', enrichedStations);
+            return enrichedStations;
+        } catch (error) {
+            console.error('Erreur lors de l\'enrichissement des adresses:', error);
+            return stations.map(station => ({ ...station, address: 'Adresse non disponible' }));
+        }
+    };
+
     const getFilteredStations = async (lat, lng, radius) => {
         const stations = await getNearbyStations(
             parseFloat(lat.toFixed(8)), // Reduire les décimales à 8
@@ -52,8 +78,12 @@ function HeroMap() {
         
         // Filtrer les stations pour ne garder que celles dans les limites visibles
         const boundsFilter = createStationBoundsFilter(mapRef);
-        return stations.filter(boundsFilter);
-        
+        const filteredStations = stations.filter(boundsFilter);
+
+        // Enrichir les stations avec des adresses courtes
+        const enrichedStations = await enrichStationsWithAddresses(filteredStations);
+
+        return enrichedStations;
     };
 
     // Fonction pour mettre à jour les stations visibles selon la carte
@@ -184,19 +214,26 @@ function HeroMap() {
                         closeButton={true}
                         closeOnClick={false}
                     >
-                        <div className="station-popup" style={{ minWidth: '250px', padding: '10px' }}>
+                        <div className="station-popup" style={{ padding: '0px 10px 0px 5px', color: '#000' }}>
                             <h6 className="fw-bold mb-2">{selectedStation.name}</h6>
-                            <p className="mb-1 text-muted small color-dark">
-                                📍 {selectedStation.address}
-                            </p>
-                            {selectedStation.power && (
-                                <p className="mb-1 small">
-                                    ⚡ Puissance: {selectedStation.power} kW
+                            {selectedStation.address && (
+                                <p className="mb-1" style={{ color: '#6c757d' }}>
+                                    📍 {selectedStation.address}
                                 </p>
                             )}
-                            {selectedStation.price_per_hour && (
-                                <p className="mb-2 small">
-                                    💰 Prix: {selectedStation.price_per_hour}€/h
+                            {!selectedStation.address && (
+                                <p className="mb-1" style={{ color: '#dc3545' }}>
+                                    📍 Chargement de l'adresse...
+                                </p>
+                            )}
+                            {selectedStation.power_kw && (
+                                <p className="mb-1" style={{ color: '#6c757d' }}>
+                                    ⚡ Puissance: {selectedStation.power_kw} kW
+                                </p>
+                            )}
+                            {selectedStation.price_per_kwh && (
+                                <p className="mb-2" style={{ color: '#6c757d' }}>
+                                    💰 Prix: {selectedStation.price_per_kwh}€/kWh
                                 </p>
                             )}
                             <button 
