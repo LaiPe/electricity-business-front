@@ -102,6 +102,12 @@ function HeroMap() {
             
             try {
                 const filteredStations = await getFilteredStations(center.lat, center.lng, radius);
+                
+                // Vérifier si la station sélectionnée est toujours dans les résultats
+                if (selectedStation && !filteredStations.find(station => station.id === selectedStation.id)) {
+                    setSelectedStation(null); // Fermer le popup si le marqueur n'est plus visible
+                }
+                
                 setSearchResults(filteredStations);
             } catch (error) {
                 console.error('Erreur lors de la mise à jour des stations:', error);
@@ -110,7 +116,7 @@ function HeroMap() {
                 setIsSearching(false);
             }
         }
-    }, []);
+    }, [selectedStation]);
 
     // Debouncer la fonction pour éviter trop d'appels API
     const debouncedUpdateStations = useCallback(
