@@ -224,7 +224,21 @@ function HeroMap() {
                             <h6 className="fw-bold mb-2">{selectedStation.name}</h6>
                             {selectedStation.address && (
                                 <p className="mb-1" style={{ color: '#6c757d' }}>
-                                    📍 {selectedStation.address}
+                                    📍 <a 
+                                        href={`https://www.google.com/maps?q=${selectedStation.latitude},${selectedStation.longitude}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{ 
+                                            color: '#0d6efd', 
+                                            textDecoration: 'none',
+                                            cursor: 'pointer'
+                                        }}
+                                        onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                        onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                        title={`Ouvrir dans Google Maps (${selectedStation.latitude}, ${selectedStation.longitude})`}
+                                    >
+                                        {selectedStation.address}
+                                    </a>
                                 </p>
                             )}
                             {!selectedStation.address && (
