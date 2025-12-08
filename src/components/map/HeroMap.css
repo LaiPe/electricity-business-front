@@ -1,0 +1,29 @@
+#hero-map {
+    height: 100% !important;
+    width: 100% !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 0 !important;
+}
+
+.hero-gradient-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.8) 0%, rgba(13, 110, 253, 0.6) 15%, rgba(13, 110, 253, 0.3) 30%, rgba(13, 110, 253, 0.1) 50%, transparent 100%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+@media (max-width: 768px) {
+    #hero-map {
+        height: 80% !important;
+    }
+    .hero-gradient-overlay {
+        height: 80%;
+        background: linear-gradient(180deg, rgba(13, 110, 253, 0.8) 0%, rgba(13, 110, 253, 0.6) 15%, rgba(13, 110, 253, 0.3) 30%, rgba(13, 110, 253, 0.1) 50%, transparent 100%);
+    }
+}

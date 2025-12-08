@@ -1,4 +1,4 @@
-import {Map, Marker, Popup, ScaleControl} from 'react-map-gl/maplibre';
+import {Map, Marker, Popup} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Spinner from '../spinner/Spinner';
@@ -9,6 +9,7 @@ import { getNearbyStations } from '../../services/StationService';
 import { geocodeAddress, getShortAddress } from '../../services/GeoService';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { calculateVisibleRadius, debounce, createStationBoundsFilter } from '../../utils/MapUtils';
+import './HeroMap.css';
 
 /**
  * Composant Hero Map avec carte interactive et formulaire de recherche
@@ -168,7 +169,6 @@ function HeroMap() {
                 ref={mapRef}
                 id="hero-map"
                 initialViewState={userLocation}
-                style={{width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 0}}
                 mapStyle="https://api.maptiler.com/maps/streets/style.json?key=x8wLPu6vQFH77llyCUjo"
                 scrollZoom={false}
                 doubleClickZoom={true}
@@ -278,22 +278,12 @@ function HeroMap() {
 
             <div 
                 className="hero-gradient-overlay"
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'linear-gradient(135deg, rgba(13, 110, 253, 0.8) 0%, rgba(13, 110, 253, 0.6) 15%, rgba(13, 110, 253, 0.3) 30%, rgba(13, 110, 253, 0.1) 50%, transparent 100%)',
-                    zIndex: 1,
-                    pointerEvents: 'none'
-                }}
             />
 
             {/* Content Container */}
             <div className='container-fluid position-absolute top-0 start-0 w-100 h-100' style={{zIndex: 2, pointerEvents: 'none'}}>
                 <div className='row h-100'>
-                    <div className='col-lg-5 d-flex flex-column justify-content-between py-4' style={{pointerEvents: 'none'}}>
+                    <div className='col-lg-5 d-flex flex-column justify-content-between pb-sm-4 pt-4' style={{pointerEvents: 'none'}}>
                         <div className="hero-content" style={{pointerEvents: 'auto'}}>
                             <h1 className="fw-bold mb-4">
                                 ⚡Trouvez, réservez et gérez vos bornes de recharge en toute simplicité.

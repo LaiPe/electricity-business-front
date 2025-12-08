@@ -40,12 +40,35 @@ function HeroSearchForm({
     };
 
     return (
-        <form onSubmit={handleSubmit} className="search-form bg-white bg-opacity-90 p-4 rounded shadow" {...props}>
+        <form onSubmit={handleSubmit} className="search-form bg-white bg-opacity-90 p-sm-4 p-3 rounded sm-shadow" {...props}>
             {/* Adresse postale */}
             <div className="mb-3">
-                <label htmlFor="address" className="form-label text-dark fw-semibold">
-                    📍 Adresse ou ville
-                </label>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                    <label htmlFor="address" className="form-label text-dark fw-semibold mb-0">
+                        📍 Adresse ou ville
+                    </label>
+                    
+                    {/* Badges de statut */}
+                    <div className="d-flex gap-2">
+                        {searchError && (
+                            <span className="badge bg-danger">
+                                ❌ Erreur
+                            </span>
+                        )}
+                        
+                        {searchResults.length > 0 && !isSearching && !searchError && (
+                            <span className="badge bg-success">
+                                ✅ {searchResults.length} borne{searchResults.length > 1 ? 's' : ''}
+                            </span>
+                        )}
+                        
+                        {searchResults.length === 0 && !isSearching && searchCoordinates && !searchError && (
+                            <span className="badge bg-warning text-dark">
+                                ⚠️ Aucune borne
+                            </span>
+                        )}
+                    </div>
+                </div>
                 <input
                     type="text"
                     className="form-control"
@@ -71,25 +94,6 @@ function HeroSearchForm({
                     <>🔍 Rechercher des bornes</>
                 )}
             </button>
-            
-            {/* Messages d'erreur et de résultats */}
-            {searchError && (
-                <div className="alert alert-danger mt-3 mb-0" role="alert">
-                    ❌ {searchError}
-                </div>
-            )}
-            
-            {searchResults.length > 0 && !isSearching && (
-                <div className="alert alert-success mt-3 mb-0" role="alert">
-                    ✅ {searchResults.length} borne{searchResults.length > 1 ? 's' : ''} trouvée{searchResults.length > 1 ? 's' : ''}
-                </div>
-            )}
-            
-            {searchResults.length === 0 && !isSearching && searchCoordinates && !searchError && (
-                <div className="alert alert-warning mt-3 mb-0" role="alert">
-                    ⚠️ Aucune borne disponible
-                </div>
-            )}
             
             {/* Petit texte d'aide */}
             <small className="text-muted d-block mt-2 text-center">

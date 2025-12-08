@@ -8,7 +8,7 @@ function Home() {
     return (
         <div className="home-page">
             {/* Hero Section */}
-            <section className="hero text-white hero-fullscreen-height-minus-footer container-fluid" style={{position: "relative"}}>
+            <section className="hero text-white hero-fullscreen-height-minus-footer but-not-on-mobile container-fluid" style={{position: "relative"}}>
                 <HeroMap />
             </section>
             
