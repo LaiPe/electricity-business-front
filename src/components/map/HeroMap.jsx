@@ -150,7 +150,10 @@ function HeroMap() {
 
             // 2. Centrer la carte sur les coordonnées de recherche
             if (coordinates && mapRef.current) {
-                mapRef.current.flyTo({center: [coordinates.longitude, coordinates.latitude]});
+                mapRef.current.flyTo({
+                    center: [coordinates.longitude, coordinates.latitude], 
+                    zoom: mapRef.current.getZoom() > 13 ? mapRef.current.getZoom() : 13
+                });
             }
 
         } catch (error) {
