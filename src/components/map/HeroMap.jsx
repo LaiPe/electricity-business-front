@@ -43,6 +43,20 @@ function HeroMap() {
     const [searchError, setSearchError] = useState(null);
     const [searchCoordinates, setSearchCoordinates] = useState(null);
     const [selectedStation, setSelectedStation] = useState(null);
+    
+    // Détecter si on est sur mobile
+    const [isMobile, setIsMobile] = useState(false);
+    
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+        
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Fonction pour enrichir les stations avec des adresses
     const enrichStationsWithAddresses = async (stations) => {
@@ -173,7 +187,9 @@ function HeroMap() {
                 id="hero-map"
                 initialViewState={userLocation}
                 mapStyle="https://api.maptiler.com/maps/streets/style.json?key=x8wLPu6vQFH77llyCUjo"
-                scrollZoom={false}
+                scrollZoom={isMobile ? false : false}
+                touchZoomRotate={isMobile ? true : false}
+                touchPitch={isMobile ? true : false}
                 doubleClickZoom={true}
                 onMove={handleMapMovement}
                 onZoom={handleMapMovement}
@@ -272,11 +288,13 @@ function HeroMap() {
                     </Popup>
                 )}
                 
-                {/* Contrôles de zoom personnalisés */}
-                <ZoomControl 
-                    onZoomIn={handleZoomIn}
-                    onZoomOut={handleZoomOut}
-                />
+                {/* Contrôles de zoom personnalisés - seulement sur desktop */}
+                {!isMobile && (
+                    <ZoomControl 
+                        onZoomIn={handleZoomIn}
+                        onZoomOut={handleZoomOut}
+                    />
+                )}
             </Map>
 
             <div 
