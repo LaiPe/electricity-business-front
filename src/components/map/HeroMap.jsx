@@ -304,7 +304,7 @@ function HeroMap() {
             {/* Content Container */}
             <div className='container-fluid position-absolute top-0 start-0 w-100 h-100' style={{zIndex: 2, pointerEvents: 'none'}}>
                 <div className='row h-100'>
-                    <div className='col-lg-5 d-flex flex-column justify-content-between pb-sm-4 pt-4' style={{pointerEvents: 'none'}}>
+                    <div className='col-md-5 d-flex flex-column justify-content-between pb-sm-4 pt-4' style={{pointerEvents: 'none'}}>
                         <div className="hero-content" style={{pointerEvents: 'auto'}}>
                             <h1 className="fw-bold mb-4">
                                 ⚡Trouvez, réservez et gérez vos bornes de recharge en toute simplicité.
