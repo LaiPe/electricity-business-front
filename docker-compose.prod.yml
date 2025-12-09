@@ -1,0 +1,11 @@
+services:
+  electricity-business:
+    image: ghcr.io/laipe/laipe/electricity-business-front:latest
+    container_name: electricity-business
+    networks:
+      - caddy_network
+    restart: unless-stopped
+
+networks:
+  caddy_network:
+    external: true

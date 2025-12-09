@@ -1,0 +1,17 @@
+services:
+  electricity-business:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=https://electricity-business.leopeyronnet.fr/api
+    container_name: electricity-business
+    ports:
+      - "3000:80"
+    networks:
+      - electricity_business_api_external
+    restart: unless-stopped
+
+networks:
+  electricity_business_api_external:
+    external: true
