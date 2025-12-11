@@ -35,24 +35,29 @@ function Header() {
                             // Navigation pour utilisateur connecté
                             <>
                                 <span className='navbar-text me-2'>Bienvenue, {username}!</span>
-                                <li className='nav-item'>
-                                    <NavLink to="/projects" className='nav-link' onClick={() => setIsNavOpen(false)}>Projets</NavLink>
+                                <li className='nav-item dropdown'>
+                                    <NavLink to="/dashboard" className="nav-link" onClick={toggleNav}>Tableau de bord</NavLink>
                                 </li>
-                                <li className='nav-item'>
-                                    <NavLink to="/tasks" className='nav-link' onClick={() => setIsNavOpen(false)}>Tâches</NavLink>
-                                </li>
-                                <li className='nav-item'>
-                                    <NavLink to="/logout" className='nav-link' onClick={() => setIsNavOpen(false)}>Déconnexion</NavLink>
+                                <li className='nav-item dropdown'>
+                                    <a className='nav-link dropdown-toggle' href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                                        Mon compte
+                                    </a>
+                                    <ul className="dropdown-menu">
+                                        <li><NavLink to="/profile" className="dropdown-item" onClick={toggleNav}>Profil</NavLink></li>
+                                        <li><NavLink to="/settings" className="dropdown-item" onClick={toggleNav}>Paramètres</NavLink></li>
+                                        <li><hr className="dropdown-divider"/></li>
+                                        <li><NavLink to="/logout" className="dropdown-item text-danger" onClick={toggleNav}>Déconnexion</NavLink></li>
+                                    </ul>
                                 </li>
                             </>
                         ) : (
                             // Navigation pour utilisateur non connecté
                             <>
                                 <li className='nav-item'>
-                                    <NavLink to="/login" className='nav-link' onClick={() => setIsNavOpen(false)}>Connexion</NavLink>
+                                    <NavLink to="/login" className='nav-link' onClick={toggleNav}>Connexion</NavLink>
                                 </li>
                                 <li className='nav-item'>
-                                    <NavLink to="/register" className='nav-link' onClick={() => setIsNavOpen(false)}>Inscription</NavLink>
+                                    <NavLink to="/register" className='nav-link' onClick={toggleNav}>Inscription</NavLink>
                                 </li>
                             </>
                         )}
