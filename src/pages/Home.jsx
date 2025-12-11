@@ -6,7 +6,7 @@ function Home() {
     const { isAuthenticated, username } = useAuth();
 
     return (
-        <div className="home-page">
+        <main className="home-page">
             {/* Hero Section */}
             <section className="hero text-white hero-fullscreen-height-minus-footer but-not-on-mobile container-fluid" style={{position: "relative"}}>
                 <HeroMap />
@@ -136,7 +136,7 @@ function Home() {
                     </div>
                 </div>
             </section>
-        </div>
+        </main>
     );
 }
 
