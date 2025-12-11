@@ -24,7 +24,7 @@ function HeroMap() {
 
     useEffect(() => {  
         if (mapRef.current && userLocation) {
-            mapRef.current.flyTo({center: [userLocation.longitude, userLocation.latitude]});
+            mapRef.current.jumpTo({center: [userLocation.longitude, userLocation.latitude]});
         }
     }, [userLocation]);
 
@@ -118,6 +118,11 @@ function HeroMap() {
                 centre: { lat: center.lat, lng: center.lng },
                 rayon: radius + 'km'
             });
+
+            if (radius > 1000) {
+                setIsSearching(false);
+                return;
+            }
             
             try {
                 const filteredStations = await getFilteredStations(center.lat, center.lng, radius);
@@ -168,7 +173,7 @@ function HeroMap() {
 
             // 2. Centrer la carte sur les coordonnées de recherche
             if (coordinates && mapRef.current) {
-                mapRef.current.flyTo({
+                mapRef.current.jumpTo({
                     center: [coordinates.longitude, coordinates.latitude], 
                     zoom: mapRef.current.getZoom() > 13 ? mapRef.current.getZoom() : 13
                 });
@@ -217,6 +222,8 @@ function HeroMap() {
                 touchZoomRotate={isMobile ? true : false}
                 touchPitch={isMobile ? true : false}
                 doubleClickZoom={true}
+                minZoom={7}
+                maxZoom={18}
                 onMove={handleMapMovement}
                 onZoom={handleMapMovement}
             >
