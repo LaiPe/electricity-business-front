@@ -1,13 +1,26 @@
+:root{
+    --header-height: 82px;
+    --footer-height: 100px;
+}
+
 .hero-fullscreen-height {
-    min-height: calc(100vh - 76px);
+    min-height: calc(100vh - var(--header-height));
+}
+
+.hero-fullscreen-strict-height {
+    height: calc(100vh - var(--header-height));
 }
 
 .hero-fullscreen-height-minus-footer {
-    min-height: calc(100vh - 76px - 100px);
+    min-height: calc(100vh - var(--header-height) - var(--footer-height));
+}
+
+.hero-fullscreen-strict-height-minus-footer {
+    height: calc(100vh - var(--header-height) - var(--footer-height));
 }
 
 .hero-fullscreen-height-minus-footer.but-not-on-mobile {
     @media (max-width: 768px) {
-        min-height: calc(100vh - 76px);
+        min-height: calc(100vh - var(--header-height));
     }
 }
