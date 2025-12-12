@@ -14,6 +14,9 @@ import BannedPage from './pages/navigation/BannedPage.jsx';
 import UnauthorizedPage from './pages/navigation/UnauthorizedPage.jsx';
 import DashboardLayout from './layouts/DashboardLayout.jsx';
 import Overview from './pages/dashboard/Overview.jsx';
+import Bookings from './pages/dashboard/Bookings.jsx';
+import Vehicles from './pages/dashboard/Vehicles.jsx';
+import Stations from './pages/dashboard/Stations.jsx';
 
 import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
 import Spinner from './components/spinner/Spinner.jsx';
@@ -71,15 +74,15 @@ const router = createBrowserRouter([
           },
           {
             path: 'bookings',
-            element: <div>Bookings Page</div>
+            element: <Bookings />
           },
           {
             path: 'vehicles',
-            element: <div>Vehicles Page</div>
+            element: <Vehicles />
           },
           {
             path: 'stations',
-            element: <div>Stations Page</div> 
+            element: <Stations />
           }
         ]
       }
