@@ -34,7 +34,9 @@ function Header() {
                         {isAuthenticated ? (
                             // Navigation pour utilisateur connecté
                             <>
-                                <span className='navbar-text me-2'>Bienvenue, {username}!</span>
+                                <li className='nav-item dropdown'>
+                                    <NavLink to="/" className="nav-link" onClick={toggleNav}>Accueil</NavLink>
+                                </li>
                                 <li className='nav-item dropdown'>
                                     <NavLink to="/dashboard" className="nav-link" onClick={toggleNav}>Tableau de bord</NavLink>
                                 </li>
