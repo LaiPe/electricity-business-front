@@ -31,7 +31,7 @@ function Home() {
                                     <div className="feature-icon mb-3">
                                         <i className="bi bi-search text-primary fs-1"></i>
                                     </div>
-                                    <h4 className="card-title">🔍 Recherche Intelligente</h4>
+                                    <h4 className="card-title">Recherche Intelligente</h4>
                                     <p className="card-text text-muted">
                                         Trouvez les stations de recharge proches de vous avec 
                                         géolocalisation et filtres avancés.
@@ -46,7 +46,7 @@ function Home() {
                                     <div className="feature-icon mb-3">
                                         <i className="bi bi-calendar-check text-success fs-1"></i>
                                     </div>
-                                    <h4 className="card-title">📅 Réservation Facile</h4>
+                                    <h4 className="card-title">Réservation Facile</h4>
                                     <p className="card-text text-muted">
                                         Réservez un créneau de recharge en quelques clics 
                                         et gérez vos réservations en temps réel.
@@ -61,7 +61,7 @@ function Home() {
                                     <div className="feature-icon mb-3">
                                         <i className="bi bi-shield-check text-warning fs-1"></i>
                                     </div>
-                                    <h4 className="card-title">🛡️ Sécurisé & Fiable</h4>
+                                    <h4 className="card-title">Sécurisé & Fiable</h4>
                                     <p className="card-text text-muted">
                                         Authentification sécurisée, paiements protégés 
                                         et évaluations communautaires.
