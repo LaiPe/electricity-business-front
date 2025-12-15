@@ -17,7 +17,7 @@ function BannedPage() {
     };
 
     return (
-        <div className="container-fluid d-flex align-items-center justify-content-center hero-fullscreen-height bg-light">
+        <main className="container-fluid d-flex align-items-center justify-content-center hero-fullscreen-height bg-light">
             <div className="card shadow-sm" style={{maxWidth: '500px', width: '100%'}}>
                 <div className="card-body p-4 text-center">
                     <div className="mb-4">
@@ -61,7 +61,7 @@ function BannedPage() {
                     )}
                 </div>
             </div>
-        </div>
+        </main>
     );
 }
 

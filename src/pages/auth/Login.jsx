@@ -25,7 +25,7 @@ export function Login() {
 
         try {
             await login(formData);
-            navigate('/projects');
+            navigate('/dashboard');
         } catch (error) {
             setError(error.message || 'Échec de la connexion, veuillez vérifier vos identifiants et réessayer.');
         } finally {
@@ -54,7 +54,7 @@ export function Login() {
     };
 
     return (
-        <div className="container-fluid d-flex align-items-center justify-content-center hero-fullscreen-height bg-light">
+        <main className="container-fluid d-flex align-items-center justify-content-center hero-fullscreen-height bg-light">
             <div className="card shadow-sm" style={{maxWidth: '400px', width: '100%'}}>
                 <div className="card-body p-4">
                     <h2 className="card-title text-center mb-4">Connexion</h2>
@@ -129,7 +129,7 @@ export function Login() {
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     )
 }
 

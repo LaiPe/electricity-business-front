@@ -1,6 +1,7 @@
 import {Map, Marker, Popup} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Spinner from '../spinner/Spinner';
 import HeroSearchForm from './HeroSearchForm';
 import GeolocationButton from '../form/GeolocationButton';
@@ -8,6 +9,7 @@ import ZoomControl from './ZoomControl';
 import { getNearbyStations } from '../../services/StationService';
 import { geocodeAddress, getShortAddress } from '../../services/GeoService';
 import { useGeolocation } from '../../hooks/useGeolocation';
+import { useAuth } from '../../contexts/AuthContext';
 import { calculateVisibleRadius, debounce, createStationBoundsFilter } from '../../utils/MapUtils';
 import './HeroMap.css';
 
@@ -16,11 +18,13 @@ import './HeroMap.css';
  */
 function HeroMap() {
     const mapRef = useRef();
+    const navigate = useNavigate();
     const { userLocation, locationStatus, getUserLocation } = useGeolocation();
+    const { isAuthenticated } = useAuth();
 
     useEffect(() => {  
         if (mapRef.current && userLocation) {
-            mapRef.current.flyTo({center: [userLocation.longitude, userLocation.latitude]});
+            mapRef.current.jumpTo({center: [userLocation.longitude, userLocation.latitude]});
         }
     }, [userLocation]);
 
@@ -114,6 +118,11 @@ function HeroMap() {
                 centre: { lat: center.lat, lng: center.lng },
                 rayon: radius + 'km'
             });
+
+            if (radius > 1000) {
+                setIsSearching(false);
+                return;
+            }
             
             try {
                 const filteredStations = await getFilteredStations(center.lat, center.lng, radius);
@@ -164,7 +173,7 @@ function HeroMap() {
 
             // 2. Centrer la carte sur les coordonnées de recherche
             if (coordinates && mapRef.current) {
-                mapRef.current.flyTo({
+                mapRef.current.jumpTo({
                     center: [coordinates.longitude, coordinates.latitude], 
                     zoom: mapRef.current.getZoom() > 13 ? mapRef.current.getZoom() : 13
                 });
@@ -173,6 +182,28 @@ function HeroMap() {
         } catch (error) {
             console.error('Erreur lors de la recherche:', error);
             setSearchError(error.message || 'Erreur lors de la recherche de bornes');
+        }
+    };
+
+    // Gestion du clic sur le bouton de réservation
+    const handleClickBooking = () => {
+        if (!selectedStation) return;
+
+        if (isAuthenticated) {
+            // Utilisateur connecté : rediriger vers la page de création de réservation
+            navigate(`/booking/create`, {
+                state: {
+                    station: selectedStation,
+                    coordinates: {
+                        latitude: selectedStation.latitude,
+                        longitude: selectedStation.longitude
+                    }
+                }
+            });
+        } else {
+            // Utilisateur non connecté : rediriger vers la page de connexion
+            // avec une redirection de retour vers la réservation
+            navigate('/login');
         }
     };
     // Si la géolocalisation n'est pas encore disponible, afficher le spinner
@@ -191,6 +222,8 @@ function HeroMap() {
                 touchZoomRotate={isMobile ? true : false}
                 touchPitch={isMobile ? true : false}
                 doubleClickZoom={true}
+                minZoom={7}
+                maxZoom={18}
                 onMove={handleMapMovement}
                 onZoom={handleMapMovement}
             >
@@ -277,10 +310,7 @@ function HeroMap() {
                             )}
                             <button 
                                 className="btn btn-primary btn-sm w-100"
-                                onClick={() => {
-                                    console.log('Réservation de la station:', selectedStation);
-                                    // TODO: Implémenter la logique de réservation
-                                }}
+                                onClick={handleClickBooking}
                             >
                                 Réserver
                             </button>

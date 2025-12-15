@@ -6,7 +6,7 @@ function Home() {
     const { isAuthenticated, username } = useAuth();
 
     return (
-        <div className="home-page">
+        <main className="home-page">
             {/* Hero Section */}
             <section className="hero text-white hero-fullscreen-height-minus-footer but-not-on-mobile container-fluid" style={{position: "relative"}}>
                 <HeroMap />
@@ -48,8 +48,8 @@ function Home() {
                                     </div>
                                     <h4 className="card-title">Réservation Facile</h4>
                                     <p className="card-text text-muted">
-                                        Réservez vos créneaux de recharge en quelques clics 
-                                        et gérez vos sessions en temps réel.
+                                        Réservez un créneau de recharge en quelques clics 
+                                        et gérez vos réservations en temps réel.
                                     </p>
                                 </div>
                             </div>
@@ -74,7 +74,7 @@ function Home() {
             </section>
 
             {/* CTA Section */}
-            <section className="cta bg-light py-5">
+            <section className="cta bg-primary bg-opacity-10 py-5">
                 <div className="container">
                     <div className="row justify-content-center text-center">
                         <div className="col-lg-8">
@@ -84,11 +84,11 @@ function Home() {
                                 notre plateforme s'adapte à vos besoins.
                             </p>
                             {!isAuthenticated ? (
-                                <div className="d-flex gap-3">
-                                    <Link to="/register" className="btn btn-light btn-lg">
+                                <div className="d-flex justify-content-center gap-3">
+                                    <Link to="/register" className="btn btn-primary btn-lg">
                                         Commencer
                                     </Link>
-                                    <Link to="/login" className="btn btn-outline-light btn-lg">
+                                    <Link to="/login" className="btn btn-outline-secondary btn-lg">
                                         Se connecter
                                     </Link>
                                 </div>
@@ -136,7 +136,7 @@ function Home() {
                     </div>
                 </div>
             </section>
-        </div>
+        </main>
     );
 }
 

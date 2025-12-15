@@ -23,10 +23,9 @@ export const BANNED_USER_ROUTES = [
 
 // Routes nécessitant une vérification complète du compte
 export const VERIFIED_USER_ROUTES = [
-    '/dashboard',
+    '/dashboard*',
     '/profile',
-    '/settings',
-    '/projects*', // Wildcard pour toutes les routes commençant par /projects
+    '/settings'
 ];
 
 // Routes protégées par rôle

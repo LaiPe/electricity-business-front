@@ -129,7 +129,7 @@ function Register() {
     };
 
     return (
-        <div className="container-fluid d-flex align-items-center justify-content-center hero-fullscreen-height bg-light">
+        <main className="container-fluid d-flex align-items-center justify-content-center hero-fullscreen-height bg-light">
             <div className="card shadow-sm" style={{maxWidth: '400px', width: '100%'}}>
                 <div className="card-body p-4">
                     <h2 className="card-title text-center mb-4">Inscription</h2>
@@ -231,7 +231,7 @@ function Register() {
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     );
 }
 
