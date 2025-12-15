@@ -7,7 +7,7 @@ import Spinner from '../../components/spinner/Spinner';
 function Vehicles() {
     const { isAuthenticated } = useAuth();
     const [vehicles, setVehicles] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {

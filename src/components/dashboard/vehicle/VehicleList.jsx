@@ -24,8 +24,15 @@ function VehicleListContent({ onError }) {
 
     return (
         <div>
-            <h2>Mes Véhicules</h2>
-            <button className="btn btn-primary mb-3" onClick={toggleAddForm}>Ajouter un véhicule</button>
+            <div className="d-flex justify-content-between align-items-center mb-3 gap-2">
+                <div>
+                    <h2 className='mb-1'>Mes Véhicules</h2>
+                    <span className="badge bg-secondary">
+                        {vehicles.length} {vehicles.length <= 1 ? 'véhicule' : 'véhicules'}
+                    </span>
+                </div>
+                <button className="btn btn-primary mb-3" onClick={toggleAddForm}>Ajouter un véhicule</button>
+            </div>
             {vehicles.length === 0 ? (
                 <p>Aucun véhicule trouvé.</p>
             ) : (
@@ -35,7 +42,7 @@ function VehicleListContent({ onError }) {
                     ))}
                 </div>
             )}
-            { openedAddForm && <AddVehicleForm onError={onError} onClose={toggleAddForm}/> }
+            { openedAddForm && <AddVehicleForm onClose={toggleAddForm}/> }
         </div>
     );
 }

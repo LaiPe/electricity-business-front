@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useListDispatchMethodsContext } from '../../../contexts/ListContext';
 import { deleteVehicle, updateVehicle } from '../../../services/VehicleService';
-import Input from '../../form/Input';
 import UpdateVehicleForm from './UpdateVehicleForm';
 
 function VehicleItem({ vehicle, onError }) {
@@ -20,7 +19,7 @@ function VehicleItem({ vehicle, onError }) {
     const handleDelete = (vehicle) => {
         if (window.confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ?')) {
             try {
-                deleteVehicle(vehicle);
+                deleteVehicle(vehicle.id);
                 deleteItem(vehicle);
             } catch (error) {
                 onError('Erreur suppression véhicule.');
@@ -30,29 +29,25 @@ function VehicleItem({ vehicle, onError }) {
 
     return (
         <div key={vehicle.id} className="list-group-item">
-            <div className="d-flex align-items-center">
-                <div className="me-3">
+            <div className="d-flex align-items-center gap-4">
+                <div>
                     <i className="bi bi-car-front" style={{fontSize: '2rem', color: '#0d6efd'}}></i>
                 </div>
                 <div className="flex-grow-1">
                     <h5 className="mb-1">
                         {vehicle.vehicle_model.make} {vehicle.vehicle_model.model}
                     </h5>
-                    { isEditing ? (
-                        <UpdateVehicleForm vehicle={vehicle} />
-                    ) : (
-                        <p className="mb-1 text-muted">
-                            Immatriculation : {vehicle.registration_number}
-                        </p>
-                    )}
+                    <p className="mb-1 text-muted">
+                        Immatriculation : {vehicle.registration_number}
+                    </p>
                 </div>
                 <div className="d-flex gap-2">
                     <button 
                         className="btn btn-outline-primary btn-sm"
                         onClick={toggleEditing}
-                        title={`${isEditing ? 'Annuler la modification' : 'Modifier le véhicule'}`}
+                        title={'Modifier le véhicule'}
                     >
-                        <i className={`bi ${isEditing ? 'bi-x-lg' : 'bi-pencil'}`}></i>
+                        <i className={'bi bi-pencil'}></i>
                     </button>
                     <button 
                         className="btn btn-outline-danger btn-sm"
@@ -76,17 +71,19 @@ function VehicleItem({ vehicle, onError }) {
                 <div className="mt-3 pt-3 border-top">
                     <div className="row">
                         <div className="col-md-4">
-                            <strong><i className="bi bi-calendar3 me-1"></i>Année:</strong> {vehicle.vehicle_model.year}
+                            <strong><i className="bi bi-calendar3 me-2"></i>Année:</strong> {vehicle.vehicle_model.year}
                         </div>
                         <div className="col-md-4">
-                            <strong><i className="bi bi-battery me-1"></i>Capacité batterie:</strong> {vehicle.vehicle_model.battery_capacity_kwh} kWh
+                            <strong><i className="bi bi-battery me-2"></i>Capacité batterie:</strong> {vehicle.vehicle_model.battery_capacity_kwh} kWh
                         </div>
                         <div className="col-md-4">
-                            <strong><i className="bi bi-lightning me-1"></i>Consommation:</strong> {vehicle.vehicle_model.consumption_kwh_per_100km} kWh/100km
+                            <strong><i className="bi bi-lightning me-2"></i>Consommation:</strong> {vehicle.vehicle_model.consumption_kwh_per_100km} kWh/100km
                         </div>
                     </div>
                 </div>
             )}
+
+            { isEditing && <UpdateVehicleForm vehicle={vehicle} onClose={toggleEditing} />}
         </div>
     );
 }

@@ -1,57 +1,44 @@
-import { useState, useEffect } from 'react';
-import { searchVehiclesModels, addVehicle } from '../../../services/VehicleService';
+import { useState } from 'react';
+import { addVehicle } from '../../../services/VehicleService';
 import { useListDispatchMethodsContext } from '../../../contexts/ListContext';
 import Input from '../../form/Input';
 import Button from '../../form/Button';
+import VehicleModelSearchInput from './VehicleModelSearchInput';
 
-function AddVehicleForm({ onError, onClose }) {
-    const [vehicleModels, setVehicleModels] = useState([]);
+function AddVehicleForm({ onClose }) {
     const [formData, setFormData] = useState({
         modelId: '',
-        licensePlate: '',
-        searchQuery: ''
+        licensePlate: ''
     });
     const [errors, setErrors] = useState({});
+    const [generalError, setGeneralError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [loadingModels, setLoadingModels] = useState(false);
-    const [showDropdown, setShowDropdown] = useState(false);
     const [selectedModel, setSelectedModel] = useState(null);
     
     const { addItem } = useListDispatchMethodsContext();
 
-    useEffect(() => {
-        if (selectedModel) {
-            setShowDropdown(false);
-            return;
+    const handleModelSelect = (model) => {
+        setSelectedModel(model);
+        setFormData(prev => ({
+            ...prev,
+            modelId: model.id
+        }));
+        
+        // Effacer l'erreur du modèle si elle existe
+        if (errors.modelId) {
+            setErrors(prev => ({
+                ...prev,
+                modelId: ''
+            }));
         }
+    };
 
-        // Debounce pour la recherche
-        if (formData.searchQuery.trim().length >= 2) {
-            const timer = setTimeout(() => {
-                searchVehicleModels(formData.searchQuery);
-            }, 250);
-            
-            return () => clearTimeout(timer);
-        } else {
-            setVehicleModels([]);
-            setShowDropdown(false);
-        }
-    }, [formData.searchQuery]);
-
-    const searchVehicleModels = async (query) => {
-        try {
-            setLoadingModels(true);
-            const models = await searchVehiclesModels(query);
-            setVehicleModels(models);
-            setShowDropdown(models.length > 0);
-        } catch (error) {
-            onError('Erreur lors de la recherche des modèles');
-            console.error('Erreur recherche modèles:', error);
-            setVehicleModels([]);
-            setShowDropdown(false);
-        } finally {
-            setLoadingModels(false);
-        }
+    const handleClearModelSelection = () => {
+        setSelectedModel(null);
+        setFormData(prev => ({
+            ...prev,
+            modelId: ''
+        }));
     };
 
     const handleInputChange = (e) => {
@@ -66,33 +53,6 @@ function AddVehicleForm({ onError, onClose }) {
             setErrors(prev => ({
                 ...prev,
                 [name]: ''
-            }));
-        }
-        
-        // Si c'est le champ de recherche et qu'un modèle était sélectionné, le déselectionner
-        if (name === 'searchQuery' && selectedModel) {
-            setSelectedModel(null);
-            setFormData(prev => ({
-                ...prev,
-                modelId: ''
-            }));
-        }
-    };
-
-    const handleModelSelect = (model) => {
-        setSelectedModel(model);
-        setFormData(prev => ({
-            ...prev,
-            modelId: model.id,
-            searchQuery: `${model.make} ${model.model} ${model.year}`
-        }));
-        setShowDropdown(false);
-        
-        // Effacer l'erreur du modèle si elle existe
-        if (errors.modelId) {
-            setErrors(prev => ({
-                ...prev,
-                modelId: ''
             }));
         }
     };
@@ -141,7 +101,7 @@ function AddVehicleForm({ onError, onClose }) {
             
         } catch (error) {
             const errorMessage = error?.message || 'Erreur lors de l\'ajout du véhicule';
-            onError(errorMessage);
+            setGeneralError(errorMessage);
             console.error('Erreur ajout véhicule:', error);
         } finally {
             setLoading(false);
@@ -151,13 +111,11 @@ function AddVehicleForm({ onError, onClose }) {
     const handleClose = () => {
         setFormData({
             modelId: '',
-            licensePlate: '',
-            searchQuery: ''
+            licensePlate: ''
         });
         setErrors({});
+        setGeneralError('');
         setSelectedModel(null);
-        setVehicleModels([]);
-        setShowDropdown(false);
         if (onClose) {
             onClose();
         }
@@ -182,70 +140,27 @@ function AddVehicleForm({ onError, onClose }) {
                     
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
-                            <div className="mb-3 position-relative">
-                                <label htmlFor="searchQuery" className="form-label">
-                                    Modèle de véhicule <span className="text-danger">*</span>
-                                </label>
-                                <div className="position-relative">
-                                    <input
-                                        id="searchQuery"
-                                        name="searchQuery"
-                                        type="text"
-                                        className={`form-control ${errors.modelId ? 'is-invalid' : ''}`}
-                                        value={formData.searchQuery}
-                                        onChange={handleInputChange}
-                                        placeholder="Tapez pour rechercher un modèle (ex: Tesla Model 3)"
-                                        disabled={loading}
-                                        autoComplete="off"
-                                    />
-                                    {loadingModels && (
-                                        <div className="position-absolute top-50 end-0 translate-middle-y pe-3">
-                                            <div className="spinner-border spinner-border-sm" role="status">
-                                                <span className="visually-hidden">Recherche...</span>
-                                            </div>
-                                        </div>
-                                    )}
+                            {generalError && (
+                                <div className="alert alert-danger d-flex align-items-center mb-3" role="alert">
+                                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <div>{generalError}</div>
+                                    <button 
+                                        type="button" 
+                                        className="btn-close ms-auto" 
+                                        onClick={() => setGeneralError('')}
+                                    ></button>
                                 </div>
-                                
-                                {/* Dropdown des résultats */}
-                                {showDropdown && vehicleModels.length > 0 && (
-                                    <div className="dropdown-menu show w-100 mt-1" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                                        {vehicleModels.map((model) => (
-                                            <button
-                                                key={model.id}
-                                                type="button"
-                                                className="dropdown-item"
-                                                onClick={() => handleModelSelect(model)}
-                                            >
-                                                <div>
-                                                    <strong>{model.brand} {model.model}</strong>
-                                                    <small className="text-muted d-block">Année: {model.year}</small>
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                                
-                                {formData.searchQuery.trim().length >= 2 && !loadingModels && vehicleModels.length === 0 && (
-                                    <div className="text-muted small mt-1">
-                                        <i className="bi bi-info-circle me-1"></i>
-                                        Aucun modèle trouvé pour cette recherche
-                                    </div>
-                                )}
-                                
-                                {formData.searchQuery.trim().length > 0 && formData.searchQuery.trim().length < 2 && (
-                                    <div className="text-muted small mt-1">
-                                        <i className="bi bi-info-circle me-1"></i>
-                                        Tapez au moins 2 caractères pour rechercher
-                                    </div>
-                                )}
-                                
-                                {errors.modelId && (
-                                    <div className="invalid-feedback d-block">
-                                        {errors.modelId}
-                                    </div>
-                                )}
-                            </div>
+                            )}
+                            <VehicleModelSearchInput
+                                id="searchQuery"
+                                name="searchQuery"
+                                onSelect={handleModelSelect}
+                                onClearSelection={handleClearModelSelection}
+                                onError={(message) => setGeneralError(message)}
+                                required
+                                disabled={loading}
+                                error={errors.modelId}
+                            />
 
                             <Input
                                 id="licensePlate"
@@ -276,7 +191,7 @@ function AddVehicleForm({ onError, onClose }) {
                                 variant="primary"
                                 loading={loading}
                                 loadingText="Ajout en cours..."
-                                disabled={loadingModels || !selectedModel}
+                                disabled={!selectedModel}
                             >
                                 <i className="bi bi-plus-circle me-2"></i>
                                 Ajouter
