@@ -13,7 +13,7 @@
     left: 0;
     right: 0;
     height: 100%;
-    background: linear-gradient(135deg, rgba(13, 110, 253, 0.8) 0%, rgba(13, 110, 253, 0.6) 15%, rgba(13, 110, 253, 0.3) 30%, rgba(13, 110, 253, 0.1) 50%, transparent 100%);
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.8) 0%, rgba(13, 110, 253, 0.6) 15%, rgba(13, 110, 253, 0.3) 30%, rgba(13, 110, 253, 0.1) 50%, transparent 60%);
     z-index: 1;
     pointer-events: none;
 }
@@ -24,6 +24,6 @@
     }
     .hero-gradient-overlay {
         height: 80%;
-        background: linear-gradient(180deg, rgba(13, 110, 253, 0.8) 0%, rgba(13, 110, 253, 0.6) 15%, rgba(13, 110, 253, 0.3) 30%, rgba(13, 110, 253, 0.1) 50%, transparent 100%);
+        background: linear-gradient(180deg, rgba(13, 110, 253, 0.8) 0%, rgba(13, 110, 253, 0.6) 10%, rgba(13, 110, 253, 0.3) 20%, rgba(13, 110, 253, 0.1) 30%, transparent 40%);
     }
 }
