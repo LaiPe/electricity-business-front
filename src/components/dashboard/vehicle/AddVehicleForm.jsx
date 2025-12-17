@@ -191,7 +191,6 @@ function AddVehicleForm({ onClose }) {
                                 variant="primary"
                                 loading={loading}
                                 loadingText="Ajout en cours..."
-                                disabled={!selectedModel}
                             >
                                 <i className="bi bi-plus-circle me-2"></i>
                                 Ajouter
