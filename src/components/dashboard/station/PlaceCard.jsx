@@ -19,14 +19,14 @@ function PlaceCard({ place, onError }) {
     };
 
     const handleDelete = async () => {
-        if (window.confirm('Êtes-vous sûr de vouloir supprimer cette place et toutes ses bornes de recharge ?')) {
+        if (window.confirm('Êtes-vous sûr de vouloir supprimer ce lieu et toutes ses bornes de recharge ?')) {
             try {
                 await deletePlace(place.id);
                 deleteItem(place);
             } catch (error) {
-                const errorMessage = error?.message || 'Erreur lors de la suppression de la place';
+                const errorMessage = error?.message || 'Erreur lors de la suppression du lieu';
                 onError(errorMessage);
-                console.error('Erreur suppression place:', error);
+                console.error('Erreur suppression lieu:', error);
             }
         }
     };
@@ -45,7 +45,7 @@ function PlaceCard({ place, onError }) {
                             className="btn-sm"
                             variant="outline-primary"
                             onClick={toggleEditing}
-                            title={'Modifier le véhicule'}
+                            title={'Modifier le lieu'}
                         >
                             <i className={'bi bi-pencil'}></i>
                         </Button>
@@ -53,7 +53,7 @@ function PlaceCard({ place, onError }) {
                             className="btn-sm"
                             variant="outline-danger"
                             onClick={handleDelete}
-                            title="Supprimer le véhicule"
+                            title="Supprimer le lieu"
                         >
                             <i className="bi bi-trash"></i>
                         </Button>

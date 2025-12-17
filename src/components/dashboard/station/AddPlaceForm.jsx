@@ -40,7 +40,7 @@ function AddPlaceForm({ onClose }) {
         const newErrors = {};
         
         if (!formData.name.trim()) {
-            newErrors.name = 'Veuillez saisir un nom pour la place';
+            newErrors.name = 'Veuillez saisir un nom pour le lieu';
         } else if (formData.name.trim().length < 3) {
             newErrors.name = 'Le nom doit contenir au moins 3 caractères';
         }
@@ -77,9 +77,9 @@ function AddPlaceForm({ onClose }) {
             }
             
         } catch (error) {
-            const errorMessage = error?.message || 'Erreur lors de l\'ajout de la place';
+            const errorMessage = error?.message || 'Erreur lors de l\'ajout du lieu';
             setGeneralError(errorMessage);
-            console.error('Erreur ajout place:', error);
+            console.error('Erreur ajout lieu:', error);
         } finally {
             setLoading(false);
         }
@@ -104,7 +104,7 @@ function AddPlaceForm({ onClose }) {
                     <div className="modal-header">
                         <h5 className="modal-title">
                             <i className="bi bi-geo-alt me-2"></i>
-                            Ajouter une place
+                            Ajouter un lieu
                         </h5>
                         <button 
                             type="button" 
@@ -131,7 +131,7 @@ function AddPlaceForm({ onClose }) {
                             <Input
                                 id="name"
                                 name="name"
-                                label="Nom de la place"
+                                label="Nom du lieu"
                                 value={formData.name}
                                 onChange={handleInputChange}
                                 error={errors.name}
@@ -152,7 +152,7 @@ function AddPlaceForm({ onClose }) {
                                     className={`form-control ${errors.description ? 'is-invalid' : ''}`}
                                     value={formData.description}
                                     onChange={handleInputChange}
-                                    placeholder="Décrivez cette place, son emplacement, ses particularités..."
+                                    placeholder="Décrivez ce lieu, son emplacement, ses particularités..."
                                     disabled={loading}
                                     rows="4"
                                     maxLength="500"

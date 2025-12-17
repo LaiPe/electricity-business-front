@@ -50,7 +50,7 @@ function UpdatePlaceForm({ place, onClose, onSuccess }) {
         const newErrors = {};
         
         if (!formData.name.trim()) {
-            newErrors.name = 'Veuillez saisir un nom pour la place';
+            newErrors.name = 'Veuillez saisir un nom pour le lieu';
         } else if (formData.name.trim().length < 3) {
             newErrors.name = 'Le nom doit contenir au moins 3 caractères';
         }
@@ -91,9 +91,9 @@ function UpdatePlaceForm({ place, onClose, onSuccess }) {
             }
             
         } catch (error) {
-            const errorMessage = error?.message || 'Erreur lors de la mise à jour de la place';
+            const errorMessage = error?.message || 'Erreur lors de la mise à jour du lieu';
             setGeneralError(errorMessage);
-            console.error('Erreur mise à jour place:', error);
+            console.error('Erreur mise à jour lieu:', error);
         } finally {
             setLoading(false);
         }
@@ -119,7 +119,7 @@ function UpdatePlaceForm({ place, onClose, onSuccess }) {
                         <div className="modal-body">
                             <div className="alert alert-warning">
                                 <i className="bi bi-exclamation-triangle me-2"></i>
-                                Aucune place sélectionnée pour la modification.
+                                Aucun lieu sélectionné pour la modification.
                             </div>
                         </div>
                     </div>
@@ -135,7 +135,7 @@ function UpdatePlaceForm({ place, onClose, onSuccess }) {
                     <div className="modal-header">
                         <h5 className="modal-title">
                             <i className="bi bi-pencil me-2"></i>
-                            Modifier la place
+                            Modifier le lieu
                         </h5>
                         <button 
                             type="button" 
@@ -162,7 +162,7 @@ function UpdatePlaceForm({ place, onClose, onSuccess }) {
                             <Input
                                 id="name"
                                 name="name"
-                                label="Nom de la place"
+                                label="Nom du lieu"
                                 value={formData.name}
                                 onChange={handleInputChange}
                                 error={errors.name}
@@ -183,7 +183,7 @@ function UpdatePlaceForm({ place, onClose, onSuccess }) {
                                     className={`form-control ${errors.description ? 'is-invalid' : ''}`}
                                     value={formData.description}
                                     onChange={handleInputChange}
-                                    placeholder="Décrivez cette place, son emplacement, ses particularités..."
+                                    placeholder="Décrivez ce lieu, son emplacement, ses particularités..."
                                     disabled={loading}
                                     rows="4"
                                     maxLength="500"

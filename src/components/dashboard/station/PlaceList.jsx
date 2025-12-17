@@ -31,13 +31,13 @@ function PlaceListContent({ onError }) {
                 <div>
                     <h2 className='mb-1'>Mes Bornes</h2>
                     <span className="badge bg-secondary me-2">
-                        {places.length} {places.length <= 1 ? 'place' : 'places'}
+                        {places.length} {places.length <= 1 ? 'lieu' : 'lieux'}
                     </span>
                     <span className="badge bg-secondary">
                         {countStations()} {countStations() <= 1 ? 'borne' : 'bornes'}
                     </span>
                 </div>
-                <button className="btn btn-primary mb-3 ms-3" onClick={toggleAddForm}>Ajouter une place</button>
+                <button className="btn btn-primary mb-3 ms-3" onClick={toggleAddForm}>Ajouter un lieu</button>
             </div>
             {places.length === 0 ? (
                 <p>Aucune borne trouvée.</p>
