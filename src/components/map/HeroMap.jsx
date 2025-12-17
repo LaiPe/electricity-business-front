@@ -19,21 +19,8 @@ import './HeroMap.css';
 function HeroMap() {
     const mapRef = useRef();
     const navigate = useNavigate();
-    const { userLocation, locationStatus, getUserLocation } = useGeolocation();
+    const { userLocation, locationStatus } = useGeolocation();
     const { isAuthenticated } = useAuth();
-
-    // Fonctions de contrôle du zoom
-    const handleZoomIn = () => {
-        if (mapRef.current) {
-            mapRef.current.zoomIn();
-        }
-    };
-
-    const handleZoomOut = () => {
-        if (mapRef.current) {
-            mapRef.current.zoomOut();
-        }
-    };
     
     // États pour les résultats de recherche
     const [isSearching, setIsSearching] = useState(false);
@@ -45,7 +32,6 @@ function HeroMap() {
     
     // Détecter si on est sur mobile
     const [isMobile, setIsMobile] = useState(false);
-    
     useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth <= 768);
@@ -57,80 +43,55 @@ function HeroMap() {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // Fonction pour enrichir les stations avec des adresses (avec timeout)
+    // Fonction pour enrichir les stations avec des adresses
     const enrichStationsWithAddresses = async (stations) => {
-        console.log('Enrichissement des adresses pour', stations.length, 'stations');
-        
-        // Limiter le nombre de requêtes parallèles pour éviter la surcharge
-        const MAX_CONCURRENT = 3;
-        const enrichedStations = [...stations];
-        
-        try {
-            // Traiter par batch pour éviter de surcharger l'API
-            for (let i = 0; i < stations.length; i += MAX_CONCURRENT) {
-                const batch = stations.slice(i, i + MAX_CONCURRENT);
+        const enrichmentPromises = stations.map(async (station) => {
+            try {
+                // Timeout de 3 secondes par requête
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Timeout')), 3000)
+                );
                 
-                const batchPromises = batch.map(async (station, index) => {
-                    try {
-                        console.log('Récupération adresse pour station:', station.name);
-                        
-                        // Timeout de 5 secondes par requête
-                        const timeoutPromise = new Promise((_, reject) => 
-                            setTimeout(() => reject(new Error('Timeout')), 5000)
-                        );
-                        
-                        const addressPromise = getShortAddress(station.latitude, station.longitude);
-                        const address = await Promise.race([addressPromise, timeoutPromise]);
-                        
-                        console.log('Adresse récupérée:', address);
-                        enrichedStations[i + index] = { ...station, address };
-                        return { success: true, station: station.name };
-                    } catch (error) {
-                        console.warn('Erreur adresse pour station:', station.name, error.message);
-                        enrichedStations[i + index] = { ...station, address: null };
-                        return { success: false, station: station.name, error: error.message };
-                    }
-                });
+                const addressPromise = getShortAddress(station.latitude, station.longitude);
+                const address = await Promise.race([addressPromise, timeoutPromise]);
                 
-                const results = await Promise.allSettled(batchPromises);
-                console.log(`Batch ${Math.floor(i/MAX_CONCURRENT) + 1} terminé:`, results);
-                
-                // Petit délai entre les batches pour éviter la surcharge
-                if (i + MAX_CONCURRENT < stations.length) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
+                return { ...station, address };
+            } catch (error) {
+                return { ...station, address: null };
             }
-            
-            return enrichedStations;
+        });
+
+        // Timeout global de 3 secondes pour toutes les requêtes
+        const globalTimeout = new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(stations.map(station => ({ ...station, address: null })));
+            }, 3000);
+        });
+
+        try {
+            return await Promise.race([
+                Promise.all(enrichmentPromises),
+                globalTimeout
+            ]);
         } catch (error) {
-            console.error('Erreur lors de l\'enrichissement des adresses:', error);
+            // En cas d'erreur, retourner les stations avec address: null
             return stations.map(station => ({ ...station, address: null }));
         }
     };
 
     const getFilteredStations = async (lat, lng, radius) => {
         const stations = await getNearbyStations(
-            parseFloat(lat.toFixed(8)), // Reduire les décimales à 8
+            parseFloat(lat.toFixed(8)),
             parseFloat(lng.toFixed(8)),
-            Math.ceil(radius) // Arrondir vers le haut pour inclure toutes les stations
+            Math.ceil(radius)
         );
         
         // Filtrer les stations pour ne garder que celles dans les limites visibles
         const boundsFilter = createStationBoundsFilter(mapRef);
         const filteredStations = stations.filter(boundsFilter);
 
-        // Retourner directement les stations sans enrichissement d'adresse pour l'instant
-        // L'enrichissement se fera en arrière-plan
-        setTimeout(() => {
-            // Enrichir les adresses en arrière-plan sans bloquer l'affichage
-            enrichStationsWithAddresses(filteredStations).then(enrichedStations => {
-                setSearchResults(enrichedStations);
-            }).catch(error => {
-                console.error('Erreur enrichissement en arrière-plan:', error);
-            });
-        }, 0);
-
-        return filteredStations.map(station => ({ ...station, address: null }));
+        // Enrichir les station avec les adresses
+        return await enrichStationsWithAddresses(filteredStations);
     };
 
     // Fonction pour mettre à jour les stations visibles selon la carte
@@ -235,24 +196,13 @@ function HeroMap() {
         }
     };
 
-    useEffect(() => {  
-        if (mapRef.current && userLocation) {
-            mapRef.current.jumpTo({center: [userLocation.longitude, userLocation.latitude]});
-        }
-    }, [userLocation]);
-
-    // Effet séparé pour charger les stations initiales
-    useEffect(() => {
-        updateVisibleStations();
-    }, [userLocation, updateVisibleStations]);
-    
-     // Effet pour charger les stations initiales quand la carte et la géolocalisation sont prêtes
+    // Effet pour charger les stations initiales quand la carte et la géolocalisation sont prêtes
     useEffect(() => {
         if (isMapLoaded && userLocation) {
             console.log('Chargement initial des stations...');
             updateVisibleStations();
         }
-    }, [isMapLoaded, userLocation, updateVisibleStations]);
+    }, [isMapLoaded, userLocation]);
 
 
     // Si la géolocalisation n'est pas encore disponible, afficher le spinner
@@ -318,50 +268,32 @@ function HeroMap() {
                         longitude={selectedStation.longitude}
                         latitude={selectedStation.latitude}
                         anchor="top"
-                        onClose={() => setSelectedStation(null)}
+                        onClose={(e) => {
+                            setSelectedStation(null)}}
                         closeButton={true}
                         closeOnClick={false}
                     >
                         <div className="station-popup" style={{ padding: '0px 10px 0px 5px', color: '#000' }}>
                             <h6 className="fw-bold mb-2">{selectedStation.name}</h6>
-                            {selectedStation.address && (
-                                <p className="mb-1" style={{ color: '#6c757d' }}>
-                                    📍 <a 
-                                        href={`https://www.google.com/maps?q=${selectedStation.latitude},${selectedStation.longitude}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{ 
-                                            color: '#0d6efd', 
-                                            textDecoration: 'none',
-                                            cursor: 'pointer'
-                                        }}
-                                        onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
-                                        onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
-                                        title={`Ouvrir dans Google Maps (${selectedStation.latitude}, ${selectedStation.longitude})`}
-                                    >
-                                        {selectedStation.address}
-                                    </a>
-                                </p>
-                            )}
-                            {selectedStation.address === null && (
-                                <p className="mb-1" style={{ color: '#6c757d' }}>
-                                    📍 <a 
-                                        href={`https://www.google.com/maps?q=${selectedStation.latitude},${selectedStation.longitude}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{ 
-                                            color: '#0d6efd', 
-                                            textDecoration: 'none',
-                                            cursor: 'pointer'
-                                        }}
-                                        onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
-                                        onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
-                                        title={`Voir sur Google Maps`}
-                                    >
-                                        Voir sur la carte
-                                    </a>
-                                </p>
-                            )}
+
+                            <p className="mb-1" style={{ color: '#6c757d' }}>
+                                📍 <a 
+                                    href={`https://www.google.com/maps?q=${selectedStation.latitude},${selectedStation.longitude}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ 
+                                        color: '#0d6efd', 
+                                        textDecoration: 'none',
+                                        cursor: 'pointer'
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                                    onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                                    title={`Ouvrir dans Google Maps (${selectedStation.latitude}, ${selectedStation.longitude})`}
+                                >
+                                    {selectedStation.address ? selectedStation.address  : 'Voir sur la carte'}
+                                </a>
+                            </p>
+                            
                             {selectedStation.power_kw && (
                                 <p className="mb-1" style={{ color: '#6c757d' }}>
                                     ⚡ Puissance: {selectedStation.power_kw} kW
@@ -384,10 +316,7 @@ function HeroMap() {
                 
                 {/* Contrôles de zoom personnalisés - seulement sur desktop */}
                 {!isMobile && (
-                    <ZoomControl 
-                        onZoomIn={handleZoomIn}
-                        onZoomOut={handleZoomOut}
-                    />
+                    <ZoomControl />
                 )}
             </Map>
 
@@ -407,9 +336,11 @@ function HeroMap() {
 
                         <div className='d-flex gap-2 flex-column'>
                             { locationStatus !== 'error' && 
-                                <GeolocationButton 
-                                    onClick={getUserLocation} 
-                                    className={`btn btn-light d-flex align-items-center gap-2`}
+                                <GeolocationButton
+                                    mapRef={mapRef}
+                                    centerOnMethod="jumpTo"
+                                    variant="light"
+                                    className={`d-flex align-items-center gap-2`}
                                     style={{
                                         width: '140px',
                                         height: '42px',

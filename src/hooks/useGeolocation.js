@@ -1,18 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
 
+const fallbackLocation = {
+            latitude: 48.8566, // Paris coordinates
+            longitude: 2.3522,
+            zoom: 12 // Zoom par défaut pour la vue de la carte
+};
+
+const options = {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 60000 // Cache la position pendant 1 minute
+};
+
 export const useGeolocation = () => {
     const [userLocation, setUserLocation] = useState(null);
     const [locationStatus, setLocationStatus] = useState('loading'); // 'loading', 'success', 'error', 'denied'
     const [locationError, setLocationError] = useState(null);
 
-    const getUserLocation = useCallback(() => {
+    const getUserLocation = useCallback( async () => {
         setLocationStatus('loading');
-
-        const fallbackLocation = {
-            latitude: 48.8566, // Paris coordinates
-            longitude: 2.3522,
-            zoom: 12
-        };
         
         if (!navigator.geolocation) {
             setLocationStatus('error');
@@ -20,12 +26,6 @@ export const useGeolocation = () => {
             setUserLocation(fallbackLocation);
             return;
         }
-
-        const options = {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 60000 // Cache la position pendant 1 minute
-        };
 
         navigator.geolocation.getCurrentPosition(
             (position) => {
@@ -71,6 +71,6 @@ export const useGeolocation = () => {
         userLocation,
         locationStatus,
         locationError,
-        getUserLocation
+        updateLocation : getUserLocation
     };
 };

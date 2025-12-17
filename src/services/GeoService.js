@@ -60,7 +60,16 @@ export const reverseGeocode = async (latitude, longitude, zoom = 18) => {
 
         const response = await fetch(
             `https://photon.komoot.io/reverse?lon=${longitude}&lat=${latitude}`
-        );
+        )
+
+        // SetTimeout 4s test
+        // .then(res => {
+        //     return new Promise((resolve, reject) => {
+        //         const timer = setTimeout(() => {
+        //             reject(new Error('Le service de géocodage a mis trop de temps à répondre'));
+        //         }, 4000);
+        //     });
+        // });
         
         if (!response.ok) {
             throw new Error(`Erreur HTTP: ${response.status}`);
@@ -118,6 +127,6 @@ export const getShortAddress = async (latitude, longitude) => {
         return fullParts.join(', ') || 'Adresse non disponible';
     } catch (error) {
         console.error('Erreur lors de la récupération de l\'adresse:', error);
-        return 'Localisation inconnue';
+        return null;
     }
 };

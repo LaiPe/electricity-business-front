@@ -86,11 +86,6 @@ export const createStationBoundsFilter = (mapRef) => {
         const minLng = southwest.lng;
         const maxLng = northeast.lng;
         
-        console.log('Création du filtre avec limites:', {
-            SW: { lat: minLat, lng: minLng },
-            NE: { lat: maxLat, lng: maxLng }
-        });
-        
         // Retourner la fonction callback pour Array.filter()
         return (station) => {
             const lat = parseFloat(station.latitude);
@@ -120,8 +115,6 @@ export const filterStationsInBounds = (stations, mapRef) => {
 
     const filterCallback = createStationBoundsFilter(mapRef);
     const filteredStations = stations.filter(filterCallback);
-    
-    console.log(`${filteredStations.length} stations dans les limites visibles sur ${stations.length} total`);
     
     return filteredStations;
 };

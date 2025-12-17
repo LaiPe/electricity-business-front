@@ -1,16 +1,40 @@
 import { useState } from 'react';
+import { useMap } from 'react-map-gl/maplibre';
 
 /**
  * Composant de contrôle du zoom avec boutons + et -
+ * Peut être utilisé à l'intérieur d'un composant Map (récupération auto de la référence)
+ * ou en dehors (référence passée via mapRef prop)
  */
-function ZoomControl({ onZoomIn, onZoomOut, disabled = false }) {
+function ZoomControl({ mapRef = null, disabled = false }) {
     const [isZooming, setIsZooming] = useState(false);
+
+    // Tentative de récupération de la map depuis le contexte (si dans un composant Map)
+    let mapInstance = null;
+    try {
+        const mapContext = useMap();
+        mapInstance = mapContext?.current || mapContext;
+    } catch (e) {
+        // Pas dans un contexte de Map, on utilise la prop mapRef
+        mapInstance = mapRef?.current;
+    }
 
     const handleZoomIn = async () => {
         if (disabled || isZooming) return;
         setIsZooming(true);
         try {
-            await onZoomIn();
+            if (mapInstance) {
+                // Vérifier que l'instance a bien les méthodes de MapLibre
+                if (typeof mapInstance.zoomIn === 'function') {
+                    mapInstance.zoomIn();
+                } else if (mapRef?.current && typeof mapRef.current.getMap === 'function') {
+                    // Si c'est une référence react-map-gl, accéder à l'instance MapLibre
+                    const mapLibreInstance = mapRef.current.getMap();
+                    if (typeof mapLibreInstance.zoomIn === 'function') {
+                        mapLibreInstance.zoomIn();
+                    }
+                }
+            }
         } finally {
             setTimeout(() => setIsZooming(false), 300);
         }
@@ -20,7 +44,18 @@ function ZoomControl({ onZoomIn, onZoomOut, disabled = false }) {
         if (disabled || isZooming) return;
         setIsZooming(true);
         try {
-            await onZoomOut();
+            if (mapInstance) {
+                // Vérifier que l'instance a bien les méthodes de MapLibre
+                if (typeof mapInstance.zoomOut === 'function') {
+                    mapInstance.zoomOut();
+                } else if (mapRef?.current && typeof mapRef.current.getMap === 'function') {
+                    // Si c'est une référence react-map-gl, accéder à l'instance MapLibre
+                    const mapLibreInstance = mapRef.current.getMap();
+                    if (typeof mapLibreInstance.zoomOut === 'function') {
+                        mapLibreInstance.zoomOut();
+                    }
+                }
+            }
         } finally {
             setTimeout(() => setIsZooming(false), 300);
         }
