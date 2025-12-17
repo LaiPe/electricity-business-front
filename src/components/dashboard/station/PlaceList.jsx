@@ -20,22 +20,29 @@ function PlaceListContent({ onError }) {
     const toggleAddForm = () => {
         setOpenedAddForm(!openedAddForm);
     };
+
+    const countStations = () => {
+        return places.reduce((total, place) => total + place.charging_stations.length, 0);
+    }
     
     return (
         <div>
             <div className="d-flex justify-content-between align-items-center mb-3 gap-2">
                 <div>
-                    <h2 className='mb-1'>Mes Stations</h2>
+                    <h2 className='mb-1'>Mes Bornes</h2>
+                    <span className="badge bg-secondary me-2">
+                        {places.length} {places.length <= 1 ? 'place' : 'places'}
+                    </span>
                     <span className="badge bg-secondary">
-                        {places.length} {places.length <= 1 ? 'station' : 'stations'}
+                        {countStations()} {countStations() <= 1 ? 'borne' : 'bornes'}
                     </span>
                 </div>
-                <button className="btn btn-primary mb-3 ms-3" onClick={toggleAddForm}>Ajouter une station</button>
+                <button className="btn btn-primary mb-3 ms-3" onClick={toggleAddForm}>Ajouter une place</button>
             </div>
             {places.length === 0 ? (
-                <p>Aucune station trouvée.</p>
+                <p>Aucune borne trouvée.</p>
             ) : (
-                <div className="list-group">
+                <div className="d-flex flex-wrap gap-4">
                     {places.map((place) => (
                         <PlaceCard key={place.id} place={place} onError={onError} />
                     ))}

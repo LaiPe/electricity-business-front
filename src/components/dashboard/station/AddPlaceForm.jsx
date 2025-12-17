@@ -72,6 +72,7 @@ function AddPlaceForm({ onClose }) {
             };
             
             const newPlace = await addPlace(placeData);
+            newPlace.charging_stations = [];
             
             // Ajouter la place à la liste locale
             addItem(newPlace);
