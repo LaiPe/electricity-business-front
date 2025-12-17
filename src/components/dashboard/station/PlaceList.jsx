@@ -29,8 +29,8 @@ function PlaceListContent({ onError }) {
                     <span className="badge bg-secondary">
                         {places.length} {places.length <= 1 ? 'station' : 'stations'}
                     </span>
-                    <button className="btn btn-primary mb-3 ms-3" onClick={toggleAddForm}>Ajouter une station</button>
                 </div>
+                <button className="btn btn-primary mb-3 ms-3" onClick={toggleAddForm}>Ajouter une station</button>
             </div>
             {places.length === 0 ? (
                 <p>Aucune station trouvée.</p>
