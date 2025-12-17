@@ -83,7 +83,7 @@ function PlaceCard({ place, onError }) {
             </Button>
 
 
-            { openedAddForm && <AddStationForm onClose={toggleAddForm}/> }
+            { openedAddForm && <AddStationForm onClose={toggleAddForm} place={place} /> }
             { isEditing && <UpdatePlaceForm place={place} onClose={toggleEditing} /> }
         </div>
     );

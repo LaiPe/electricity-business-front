@@ -25,3 +25,15 @@ export const updatePlace = async (placeId, placeData) => {
 export const deletePlace = async (placeId) => {
     return await apiRequest(`/places/${placeId}`, 'DELETE');
 }
+
+export const addStation = async (stationData) => {
+    return await apiRequest('/stations', 'POST', stationData);
+}
+
+export const updateStation = async (stationId, stationData) => {
+    return await apiRequest(`/stations/${stationId}`, 'PUT', stationData);
+}
+
+export const deleteStation = async (stationId) => {
+    return await apiRequest(`/stations/${stationId}`, 'DELETE');
+}
