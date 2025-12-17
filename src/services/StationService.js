@@ -17,3 +17,7 @@ export const getUserPlacesWithStations = async () => {
 export const addPlace = async (placeData) => {
     return await apiRequest('/places', 'POST', placeData);
 }
+
+export const updatePlace = async (placeId, placeData) => {
+    return await apiRequest(`/places/${placeId}`, 'PUT', placeData);
+}

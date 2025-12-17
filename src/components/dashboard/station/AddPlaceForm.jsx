@@ -45,12 +45,6 @@ function AddPlaceForm({ onClose }) {
             newErrors.name = 'Le nom doit contenir au moins 3 caractères';
         }
         
-        if (!formData.description.trim()) {
-            newErrors.description = 'Veuillez saisir une description';
-        } else if (formData.description.trim().length < 10) {
-            newErrors.description = 'La description doit contenir au moins 10 caractères';
-        }
-        
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -159,7 +153,6 @@ function AddPlaceForm({ onClose }) {
                                     value={formData.description}
                                     onChange={handleInputChange}
                                     placeholder="Décrivez cette place, son emplacement, ses particularités..."
-                                    required
                                     disabled={loading}
                                     rows="4"
                                     maxLength="500"
