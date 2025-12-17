@@ -3,7 +3,7 @@ import { useState } from 'react';
 /**
  * Bouton de géolocalisation pour réactualiser la position de l'utilisateur
  */
-function GeolocationButton({ onClick }) {
+function GeolocationButton({ onClick, ...props }) {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleClick = async () => {
@@ -25,12 +25,7 @@ function GeolocationButton({ onClick }) {
             type="button"
             onClick={handleClick}
             disabled={isLoading}
-            className={`btn btn-light d-flex align-items-center gap-2`}
-            style={{
-                width: '140px',
-                height: '42px',
-                pointerEvents: 'auto'
-            }}
+            {...props}
         >
             {isLoading ? (
                 <>
