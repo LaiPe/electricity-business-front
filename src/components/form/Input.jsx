@@ -12,6 +12,7 @@ function Input({
     disabled = false,
     placeholder,
     className = '',
+    helpText,
     ...props
 }) {
     const inputClasses = `form-control ${error ? 'is-invalid' : ''} ${className}`.trim();
@@ -36,6 +37,12 @@ function Input({
                 disabled={disabled}
                 {...props}
             />
+            {helpText && (
+                <div className="form-text text-muted">
+                    <i className="bi bi-info-circle me-1"></i>
+                    {helpText}
+                </div>
+            )}
             {error && (
                 <div className="invalid-feedback">
                     {error}

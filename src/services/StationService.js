@@ -13,3 +13,7 @@ export const getNearbyStations = async (latitude, longitude, radiusInKm) => {
 export const getUserPlacesWithStations = async () => {
     return await apiRequest('/places', 'GET');
 }
+
+export const addPlace = async (placeData) => {
+    return await apiRequest('/places', 'POST', placeData);
+}
