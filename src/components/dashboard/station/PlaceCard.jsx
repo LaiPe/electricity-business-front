@@ -1,10 +1,13 @@
 import { useState } from "react";
+import { deletePlace } from '../../../services/StationService';
+import { useListDispatchMethodsContext } from '../../../contexts/ListContext';
 import AddStationForm from "./AddStationForm";
 import UpdatePlaceForm from "./UpdatePlaceForm";
 import Button from "../../form/Button";
 import StationItem from "./StationItem";
 
 function PlaceCard({ place, onError }) {
+    const { deleteItem } = useListDispatchMethodsContext();
     const [openedAddForm, setOpenedAddForm] = useState(false);
     const toggleAddForm = () => {
         setOpenedAddForm(!openedAddForm);
@@ -15,7 +18,18 @@ function PlaceCard({ place, onError }) {
         setIsEditing(!isEditing);
     };
 
-    const handleDelete = async () => {};
+    const handleDelete = async () => {
+        if (window.confirm('Êtes-vous sûr de vouloir supprimer cette place et toutes ses bornes de recharge ?')) {
+            try {
+                await deletePlace(place.id);
+                deleteItem(place);
+            } catch (error) {
+                const errorMessage = error?.message || 'Erreur lors de la suppression de la place';
+                onError(errorMessage);
+                console.error('Erreur suppression place:', error);
+            }
+        }
+    };
     
 
     return (
