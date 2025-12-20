@@ -6,7 +6,7 @@ import { useMap } from 'react-map-gl/maplibre';
  * Peut être utilisé à l'intérieur d'un composant Map (récupération auto de la référence)
  * ou en dehors (référence passée via mapRef prop)
  */
-function ZoomControl({ mapRef = null, disabled = false }) {
+function ZoomControl({ mapRef = null, disabled = false, small = false }) {
     const [isZooming, setIsZooming] = useState(false);
 
     // Tentative de récupération de la map depuis le contexte (si dans un composant Map)
@@ -66,12 +66,12 @@ function ZoomControl({ mapRef = null, disabled = false }) {
             className="zoom-control"
             style={{
                 position: 'absolute',
-                top: '20px',
-                right: '20px',
+                top: small ? '10px' : '20px',
+                right: small ? '10px' : '20px',
                 display: 'flex',
                 flexDirection: 'column',
                 backgroundColor: 'white',
-                borderRadius: '8px',
+                borderRadius: small ? '4px' : '8px',
                 boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
                 overflow: 'hidden',
                 zIndex: 10
@@ -84,12 +84,12 @@ function ZoomControl({ mapRef = null, disabled = false }) {
                 disabled={disabled || isZooming}
                 className="btn btn-light border-0"
                 style={{
-                    width: '40px',
-                    height: '40px',
+                    width: small ? '30px' : '40px',
+                    height: small ? '30px' : '40px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '18px',
+                    fontSize: small ? '15px' : '18px',
                     fontWeight: 'bold',
                     borderRadius: 0,
                     borderBottom: '1px solid #dee2e6'
@@ -106,12 +106,12 @@ function ZoomControl({ mapRef = null, disabled = false }) {
                 disabled={disabled || isZooming}
                 className="btn btn-light border-0"
                 style={{
-                    width: '40px',
-                    height: '40px',
+                    width: small ? '30px' : '40px',
+                    height: small ? '30px' : '40px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '18px',
+                    fontSize: small ? '15px' : '18px',
                     fontWeight: 'bold',
                     borderRadius: 0
                 }}

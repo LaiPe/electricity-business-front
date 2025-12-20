@@ -3,6 +3,7 @@ import { Map, Marker } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import PropTypes from 'prop-types';
 import GeolocationButton from './GeolocationButton';
+import ZoomControl from '../map/ZoomControl';
 import { useGeolocation } from '../../hooks/useGeolocation';
 
 function MapCoordinateInput({
@@ -168,7 +169,7 @@ function MapCoordinateInput({
                 {/* Champs de saisie manuelle */}
                 <div className="p-3 border-bottom ">
                     <div className="row g-2 align-items-end">
-                        <div className="col-md-4">
+                        <div className={`${locationStatus !== 'error' ? 'col-md-4' : 'col-md-6'}`}>
                             <label className="form-label small mb-1">Latitude</label>
                             <input
                                 type="number"
@@ -182,7 +183,7 @@ function MapCoordinateInput({
                                 placeholder="Ex: 48.8566"
                             />
                         </div>
-                        <div className="col-md-4">
+                        <div className={`${locationStatus !== 'error' ? 'col-md-4' : 'col-md-6'}`}>
                             <label className="form-label small mb-1">Longitude</label>
                             <input
                                 type="number"
@@ -196,8 +197,8 @@ function MapCoordinateInput({
                                 placeholder="Ex: 2.3522"
                             />
                         </div>
-                        <div className="col-md-4">
-                            {!disabled && (
+                        {!disabled && locationStatus !== 'error' && ( 
+                            <div className="col-md-4">
                                 <GeolocationButton 
                                     mapRef={mapRef}
                                     centerOnMethod="jumpTo"
@@ -207,33 +208,45 @@ function MapCoordinateInput({
                                     className="w-100 mt-1"
                                     title="Utiliser ma position actuelle"
                                 />
-                            )}
-                        </div>
+                        </div>)}
                     </div>
                 </div>
 
                 {/* Carte */}
-                <Map
-                    ref={mapRef}
-                    {...viewState}
-                    onMove={(evt) => setViewState(evt.viewState)}
-                    style={{ width: '100%', height: mapHeight }}
-                    mapStyle="https://api.maptiler.com/maps/streets/style.json?key=x8wLPu6vQFH77llyCUjo"
-                    onClick={handleMapClick}
-                    cursor={disabled ? 'not-allowed' : 'crosshair'}
-                    interactiveLayerIds={[]}
-                    attributionControl={false}
-                >
-                    {(coordinates.lat !== null && coordinates.lng !== null) && (
-                        <Marker
-                            longitude={coordinates.lng}
-                            latitude={coordinates.lat}
-                            draggable={!disabled}
-                            onDragEnd={handleMarkerDragEnd}
-                            color="#0d6efd"
+                <div style={{ position: 'relative' }}>
+                    <Map
+                        ref={mapRef}
+                        {...viewState}
+                        onMove={(evt) => setViewState(evt.viewState)}
+                        style={{ width: '100%', height: mapHeight }}
+                        mapStyle="https://api.maptiler.com/maps/streets/style.json?key=x8wLPu6vQFH77llyCUjo"
+                        onClick={handleMapClick}
+                        cursor={disabled ? 'not-allowed' : 'crosshair'}
+                        interactiveLayerIds={[]}
+                        attributionControl={false}
+                        scrollZoom={false}
+                        doubleClickZoom={false}
+                    >
+                        {(coordinates.lat !== null && coordinates.lng !== null) && (
+                            <Marker
+                                longitude={coordinates.lng}
+                                latitude={coordinates.lat}
+                                draggable={!disabled}
+                                onDragEnd={handleMarkerDragEnd}
+                                color="#0d6efd"
+                            />
+                        )}
+                    </Map>
+                    
+                    {/* Contrôles de zoom */}
+                    {!disabled && (
+                        <ZoomControl 
+                            mapRef={mapRef}
+                            disabled={disabled}
+                            small
                         />
                     )}
-                </Map>
+                </div>
                 
                 {/* Instructions */}
                 <div className="p-2 bg-light border-top">
@@ -252,7 +265,7 @@ function MapCoordinateInput({
                         {locationStatus === 'error' && (
                             <span className="ms-2 text-warning">
                                 <i className="bi bi-exclamation-triangle me-1"></i>
-                                Erreur de géolocalisation
+                                Impossible d'obtenir votre géolocalisation
                             </span>
                         )}
                     </small>
