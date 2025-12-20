@@ -1,6 +1,8 @@
 import { useState } from "react";
 import UpdateStationForm from "./UpdateStationForm";
 import Button from "../../form/Button";
+import { deleteStation } from "../../../services/StationService";
+import { useListDispatchMethodsContext } from "../../../contexts/ListContext";
 
 function StationItem({ station, place }) {
     const formatPrice = (price) => {
@@ -12,11 +14,44 @@ function StationItem({ station, place }) {
     };
 
     const [isEditing, setIsEditing] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const { updateItem } = useListDispatchMethodsContext();
+    
     const toggleEditing = () => {
         setIsEditing(!isEditing);
     }
 
-    const handleDelete = () => {}
+    const handleDelete = async () => {
+        // Confirmation de suppression
+        const confirmDelete = window.confirm(
+            `Êtes-vous sûr de vouloir supprimer la station "${station.name}" ?\n\nCette action est irréversible.`
+        );
+        
+        if (!confirmDelete) {
+            return;
+        }
+
+        setIsDeleting(true);
+        
+        try {
+            // Supprimer la station via l'API
+            await deleteStation(station.id);
+            
+            // Mettre à jour la liste locale en retirant la station du lieu
+            const updatedPlace = {
+                ...place,
+                charging_stations: place.charging_stations.filter(s => s.id !== station.id)
+            };
+            
+            updateItem(updatedPlace);
+            
+        } catch (error) {
+            console.error('Erreur lors de la suppression de la station:', error);
+            alert('Erreur lors de la suppression de la station. Veuillez réessayer.');
+        } finally {
+            setIsDeleting(false);
+        }
+    }
 
     return (
         <li className="list-group-item py-3">
@@ -55,6 +90,9 @@ function StationItem({ station, place }) {
                             variant="outline-danger" 
                             title="Supprimer la borne"
                             onClick={handleDelete}
+                            disabled={isDeleting}
+                            loading={isDeleting}
+                            loadingText="Suppression..."
                         >
                             <i className="bi bi-trash"></i>
                         </Button>
