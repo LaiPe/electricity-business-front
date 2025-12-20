@@ -7,11 +7,13 @@ import HeroSearchForm from './HeroSearchForm';
 import GeolocationButton from '../../form/GeolocationButton';
 import ZoomControl from '../../map/ZoomControl';
 import StationPopup from '../../map/StationPopup';
+import ClusterMarker from '../../map/ClusterMarker';
+import StationMarker from '../../map/StationMarker';
 import { getNearbyStations } from '../../../services/StationService';
 import { geocodeAddress } from '../../../services/GeoService';
 import { useGeolocation } from '../../../hooks/useGeolocation';
 import { useAuth } from '../../../contexts/AuthContext';
-import { calculateVisibleRadius, debounce, createStationBoundsFilter } from '../../../utils/MapUtils';
+import { calculateVisibleRadius, debounce, createStationBoundsFilter, calculatePixelDistance } from '../../../utils/MapUtils';
 import './HeroMap.css';
 
 /**
@@ -30,6 +32,8 @@ function HeroMap() {
     const [searchCoordinates, setSearchCoordinates] = useState(null);
     const [selectedStation, setSelectedStation] = useState(null);
     const [isMapLoaded, setIsMapLoaded] = useState(false);
+    const [clusters, setClusters] = useState([]);
+    const [individualStations, setIndividualStations] = useState([]);
     
     // Détecter si on est sur mobile
     const [isMobile, setIsMobile] = useState(false);
@@ -59,6 +63,62 @@ function HeroMap() {
         
         // Retourner le tableau combiné
         return [...prevResults, ...uniqueNewStations];
+    };
+
+    // Fonction pour créer des clusters
+    const createClusters = (stations) => {
+        if (!mapRef.current || stations.length === 0) {
+            return { clusters: [], individualStations: stations };
+        }
+
+        // Distance minimum en pixels pour déclencher un cluster
+        const clusterDistancePixels = 50; // 50 pixels de distance
+        
+        const clusters = [];
+        const processedStations = new Set();
+        const individualStations = [];
+
+        stations.forEach((station, index) => {
+            if (processedStations.has(index)) return;
+
+            const nearbyStations = [station];
+            processedStations.add(index);
+
+            // Chercher les stations proches
+            stations.forEach((otherStation, otherIndex) => {
+                if (processedStations.has(otherIndex) || index === otherIndex) return;
+
+                const pixelDistance = calculatePixelDistance(
+                    station.latitude, station.longitude,
+                    otherStation.latitude, otherStation.longitude,
+                    mapRef
+                );
+
+                if (pixelDistance < clusterDistancePixels) {
+                    nearbyStations.push(otherStation);
+                    processedStations.add(otherIndex);
+                }
+            });
+
+            // Si plus d'une station, créer un cluster
+            if (nearbyStations.length > 1) {
+                // Calculer le centre du cluster
+                const avgLat = nearbyStations.reduce((sum, s) => sum + s.latitude, 0) / nearbyStations.length;
+                const avgLng = nearbyStations.reduce((sum, s) => sum + s.longitude, 0) / nearbyStations.length;
+
+                clusters.push({
+                    id: `cluster_${clusters.length}`,
+                    latitude: avgLat,
+                    longitude: avgLng,
+                    stations: nearbyStations,
+                    count: nearbyStations.length
+                });
+            } else {
+                individualStations.push(station);
+            }
+        });
+
+        return { clusters, individualStations };
     };
 
     const getFilteredStations = async (lat, lng, radius) => {
@@ -104,7 +164,16 @@ function HeroMap() {
                 }
                 
                 // Peupler le tableau existant avec les nouveaux éléments
-                setSearchResults(prevResults => mergeSearchResults(prevResults, filteredStations));
+                setSearchResults(prevResults => {
+                    const mergedResults = mergeSearchResults(prevResults, filteredStations);
+                    
+                    // Calculer les clusters
+                    const { clusters, individualStations } = createClusters(mergedResults);
+                    setClusters(clusters);
+                    setIndividualStations(individualStations);
+                    
+                    return mergedResults;
+                });
             } catch (error) {
                 console.error('Erreur lors de la mise à jour des stations:', error);
                 setSearchError('Erreur lors de la mise à jour des stations');
@@ -121,6 +190,13 @@ function HeroMap() {
     );
 
     const handleMapMovement = () => {
+        // Recalculer les clusters quand la carte bouge ou zoome
+        if (searchResults.length > 0) {
+            const { clusters, individualStations } = createClusters(searchResults);
+            setClusters(clusters);
+            setIndividualStations(individualStations);
+        }
+        
         debouncedUpdateStations();
     };
 
@@ -182,7 +258,22 @@ function HeroMap() {
     const handleMarkerClick = (station) => {
         // Définir la station sélectionnée sans enrichissement
         setSelectedStation(station);
-    }
+    };
+
+    const handleClusterClick = (cluster) => {
+        if (!mapRef.current) return;
+        
+        // Calculer le zoom nécessaire pour séparer les stations du cluster
+        const currentZoom = mapRef.current.getZoom();
+        const newZoom = Math.min(currentZoom + 3, 18); // Augmenter le zoom de 3 niveaux maximum
+        
+        // Centrer sur le cluster et zoomer
+        mapRef.current.flyTo({
+            center: [cluster.longitude, cluster.latitude],
+            zoom: newZoom,
+            duration: 1000
+        });
+    };
 
     // Effet pour charger les stations initiales quand la carte et la géolocalisation sont prêtes
     useEffect(() => {
@@ -210,44 +301,28 @@ function HeroMap() {
                 touchPitch={isMobile ? true : false}
                 doubleClickZoom={true}
                 minZoom={7}
-                maxZoom={18}
+                maxZoom={22}
                 onMove={handleMapMovement}
                 onZoom={handleMapMovement}
                 onLoad={() => setIsMapLoaded(true)}
             >
                 
-                {/* Marqueurs pour les stations trouvées */}
-                {searchResults.map((station) => (
-                    <Marker
+                {/* Marqueurs pour les clusters */}
+                {clusters.map((cluster) => (
+                    <ClusterMarker
+                        key={cluster.id}
+                        cluster={cluster}
+                        onClusterClick={handleClusterClick}
+                    />
+                ))}
+
+                {/* Marqueurs pour les stations individuelles */}
+                {individualStations.map((station) => (
+                    <StationMarker
                         key={station.id}
-                        longitude={station.longitude}
-                        latitude={station.latitude}
-                        anchor="bottom"
-                        onClick={(e) => {
-                            e.originalEvent.stopPropagation();
-                            handleMarkerClick(station);
-                        }}
-                    >
-                        <div 
-                            className="station-marker"
-                            style={{
-                                width: '30px',
-                                height: '30px',
-                                backgroundColor: '#28a745',
-                                borderRadius: '50%',
-                                border: '3px solid white',
-                                boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '14px'
-                            }}
-                            title={station.name}
-                        >
-                            ⚡
-                        </div>
-                    </Marker>
+                        station={station}
+                        onMarkerClick={handleMarkerClick}
+                    />
                 ))}
 
                 {/* Popup pour la station sélectionnée */}

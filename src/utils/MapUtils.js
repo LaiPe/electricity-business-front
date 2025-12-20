@@ -159,3 +159,25 @@ export const debounce = (func, delay) => {
         timeoutId = setTimeout(() => func.apply(null, args), delay);
     };
 };
+
+/**
+ * Calcule la distance en pixels entre deux points sur la carte
+ * @param {number} lat1 - Latitude du premier point
+ * @param {number} lng1 - Longitude du premier point
+ * @param {number} lat2 - Latitude du deuxième point
+ * @param {number} lng2 - Longitude du deuxième point
+ * @param {Object} mapRef - Référence à l'instance de carte MapLibre
+ * @returns {number} Distance en pixels
+ */
+export const calculatePixelDistance = (lat1, lng1, lat2, lng2, mapRef) => {
+    if (!mapRef.current) return 0;
+    
+    const map = mapRef.current;
+    const point1 = map.project([lng1, lat1]);
+    const point2 = map.project([lng2, lat2]);
+    
+    const dx = point1.x - point2.x;
+    const dy = point1.y - point2.y;
+    
+    return Math.sqrt(dx * dx + dy * dy);
+};
