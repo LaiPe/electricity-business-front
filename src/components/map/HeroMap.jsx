@@ -1,4 +1,4 @@
-import {Map, Marker, Popup} from 'react-map-gl/maplibre';
+import {Map, Marker} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -6,6 +6,7 @@ import Spinner from '../spinner/Spinner';
 import HeroSearchForm from './HeroSearchForm';
 import GeolocationButton from '../form/GeolocationButton';
 import ZoomControl from './ZoomControl';
+import StationPopup from './StationPopup';
 import { getNearbyStations } from '../../services/StationService';
 import { geocodeAddress, getShortAddress } from '../../services/GeoService';
 import { useGeolocation } from '../../hooks/useGeolocation';
@@ -90,8 +91,8 @@ function HeroMap() {
         const boundsFilter = createStationBoundsFilter(mapRef);
         const filteredStations = stations.filter(boundsFilter);
 
-        // Enrichir les station avec les adresses
-        return await enrichStationsWithAddresses(filteredStations);
+        // Enrichir les stations filtrées
+        return filteredStations;
     };
 
     // Fonction pour mettre à jour les stations visibles selon la carte
@@ -196,6 +197,11 @@ function HeroMap() {
         }
     };
 
+    const handleMarkerClick = (station) => {
+        // Définir la station sélectionnée sans enrichissement
+        setSelectedStation(station);
+    }
+
     // Effet pour charger les stations initiales quand la carte et la géolocalisation sont prêtes
     useEffect(() => {
         if (isMapLoaded && userLocation) {
@@ -237,7 +243,7 @@ function HeroMap() {
                         anchor="bottom"
                         onClick={(e) => {
                             e.originalEvent.stopPropagation();
-                            setSelectedStation(station);
+                            handleMarkerClick(station);
                         }}
                     >
                         <div 
@@ -264,54 +270,12 @@ function HeroMap() {
 
                 {/* Popup pour la station sélectionnée */}
                 {selectedStation && (
-                    <Popup
-                        longitude={selectedStation.longitude}
-                        latitude={selectedStation.latitude}
-                        anchor="top"
-                        onClose={(e) => {
-                            setSelectedStation(null)}}
-                        closeButton={true}
-                        closeOnClick={false}
-                    >
-                        <div className="station-popup" style={{ padding: '0px 10px 0px 5px', color: '#000' }}>
-                            <h6 className="fw-bold mb-2">{selectedStation.name}</h6>
-
-                            <p className="mb-1" style={{ color: '#6c757d' }}>
-                                📍 <a 
-                                    href={`https://www.google.com/maps?q=${selectedStation.latitude},${selectedStation.longitude}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{ 
-                                        color: '#0d6efd', 
-                                        textDecoration: 'none',
-                                        cursor: 'pointer'
-                                    }}
-                                    onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
-                                    onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
-                                    title={`Ouvrir dans Google Maps (${selectedStation.latitude}, ${selectedStation.longitude})`}
-                                >
-                                    {selectedStation.address ? selectedStation.address  : 'Voir sur la carte'}
-                                </a>
-                            </p>
-                            
-                            {selectedStation.power_kw && (
-                                <p className="mb-1" style={{ color: '#6c757d' }}>
-                                    ⚡ Puissance: {selectedStation.power_kw} kW
-                                </p>
-                            )}
-                            {selectedStation.price_per_kwh && (
-                                <p className="mb-2" style={{ color: '#6c757d' }}>
-                                    💰 Prix: {selectedStation.price_per_kwh}€/kWh
-                                </p>
-                            )}
-                            <button 
-                                className="btn btn-primary btn-sm w-100"
-                                onClick={handleClickBooking}
-                            >
-                                Réserver
-                            </button>
-                        </div>
-                    </Popup>
+                    <StationPopup 
+                        station={selectedStation}
+                        onClose={() => setSelectedStation(null)}
+                        onBooking={handleClickBooking}
+                        enrichStationsWithAddresses={enrichStationsWithAddresses}
+                    />
                 )}
                 
                 {/* Contrôles de zoom personnalisés - seulement sur desktop */}
