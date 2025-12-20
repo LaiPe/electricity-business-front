@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import HeroMap from '../components/map/HeroMap';
+import HeroMap from '../components/home/hero/HeroMap';
 
 function Home() {
     const { isAuthenticated, username } = useAuth();

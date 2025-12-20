@@ -2,16 +2,16 @@ import {Map, Marker} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Spinner from '../spinner/Spinner';
+import Spinner from '../../spinner/Spinner';
 import HeroSearchForm from './HeroSearchForm';
-import GeolocationButton from '../form/GeolocationButton';
-import ZoomControl from './ZoomControl';
-import StationPopup from './StationPopup';
-import { getNearbyStations } from '../../services/StationService';
-import { geocodeAddress } from '../../services/GeoService';
-import { useGeolocation } from '../../hooks/useGeolocation';
-import { useAuth } from '../../contexts/AuthContext';
-import { calculateVisibleRadius, debounce, createStationBoundsFilter } from '../../utils/MapUtils';
+import GeolocationButton from '../../form/GeolocationButton';
+import ZoomControl from '../../map/ZoomControl';
+import StationPopup from '../../map/StationPopup';
+import { getNearbyStations } from '../../../services/StationService';
+import { geocodeAddress } from '../../../services/GeoService';
+import { useGeolocation } from '../../../hooks/useGeolocation';
+import { useAuth } from '../../../contexts/AuthContext';
+import { calculateVisibleRadius, debounce, createStationBoundsFilter } from '../../../utils/MapUtils';
 import './HeroMap.css';
 
 /**
