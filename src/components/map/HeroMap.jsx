@@ -8,7 +8,7 @@ import GeolocationButton from '../form/GeolocationButton';
 import ZoomControl from './ZoomControl';
 import StationPopup from './StationPopup';
 import { getNearbyStations } from '../../services/StationService';
-import { geocodeAddress, getShortAddress } from '../../services/GeoService';
+import { geocodeAddress } from '../../services/GeoService';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { useAuth } from '../../contexts/AuthContext';
 import { calculateVisibleRadius, debounce, createStationBoundsFilter } from '../../utils/MapUtils';
@@ -44,40 +44,21 @@ function HeroMap() {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // Fonction pour enrichir les stations avec des adresses
-    const enrichStationsWithAddresses = async (stations) => {
-        const enrichmentPromises = stations.map(async (station) => {
-            try {
-                // Timeout de 3 secondes par requête
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Timeout')), 3000)
-                );
-                
-                const addressPromise = getShortAddress(station.latitude, station.longitude);
-                const address = await Promise.race([addressPromise, timeoutPromise]);
-                
-                return { ...station, address };
-            } catch (error) {
-                return { ...station, address: null };
-            }
-        });
-
-        // Timeout global de 3 secondes pour toutes les requêtes
-        const globalTimeout = new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(stations.map(station => ({ ...station, address: null })));
-            }, 3000);
-        });
-
-        try {
-            return await Promise.race([
-                Promise.all(enrichmentPromises),
-                globalTimeout
-            ]);
-        } catch (error) {
-            // En cas d'erreur, retourner les stations avec address: null
-            return stations.map(station => ({ ...station, address: null }));
+    // Fonction pour merger les résultats de recherche sans doublons
+    const mergeSearchResults = (prevResults, newStations) => {
+        // Si aucun résultat précédent, utiliser directement les nouveaux résultats
+        if (!prevResults || prevResults.length === 0) {
+            return newStations;
         }
+        
+        // Créer un Set des IDs existants pour éviter les doublons
+        const existingIds = new Set(prevResults.map(station => station.id));
+        
+        // Ajouter seulement les nouvelles stations
+        const uniqueNewStations = newStations.filter(station => !existingIds.has(station.id));
+        
+        // Retourner le tableau combiné
+        return [...prevResults, ...uniqueNewStations];
     };
 
     const getFilteredStations = async (lat, lng, radius) => {
@@ -122,7 +103,8 @@ function HeroMap() {
                     setSelectedStation(null); // Fermer le popup si le marqueur n'est plus visible
                 }
                 
-                setSearchResults(filteredStations);
+                // Peupler le tableau existant avec les nouveaux éléments
+                setSearchResults(prevResults => mergeSearchResults(prevResults, filteredStations));
             } catch (error) {
                 console.error('Erreur lors de la mise à jour des stations:', error);
                 setSearchError('Erreur lors de la mise à jour des stations');
@@ -274,7 +256,6 @@ function HeroMap() {
                         station={selectedStation}
                         onClose={() => setSelectedStation(null)}
                         onBooking={handleClickBooking}
-                        enrichStationsWithAddresses={enrichStationsWithAddresses}
                     />
                 )}
                 

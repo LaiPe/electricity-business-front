@@ -1,12 +1,49 @@
 import { useState, useEffect } from 'react';
 import { Popup } from 'react-map-gl/maplibre';
+import { getShortAddress } from '../../services/GeoService';
 
 /**
  * Composant pour afficher le popup d'une station avec enrichissement d'adresse
  */
-function StationPopup({ station, onClose, onBooking, enrichStationsWithAddresses }) {
+function StationPopup({ station, onClose, onBooking }) {
     const [enrichedStation, setEnrichedStation] = useState(station);
     const [isLoadingAddress, setIsLoadingAddress] = useState(false);
+
+    // Fonction pour enrichir les stations avec des adresses
+    const enrichStationsWithAddresses = async (stations) => {
+        const enrichmentPromises = stations.map(async (station) => {
+            try {
+                // Timeout de 3 secondes par requête
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Timeout')), 3000)
+                );
+                
+                const addressPromise = getShortAddress(station.latitude, station.longitude);
+                const address = await Promise.race([addressPromise, timeoutPromise]);
+                
+                return { ...station, address };
+            } catch (error) {
+                return { ...station, address: null };
+            }
+        });
+
+        // Timeout global de 3 secondes pour toutes les requêtes
+        const globalTimeout = new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(stations.map(station => ({ ...station, address: null })));
+            }, 3000);
+        });
+
+        try {
+            return await Promise.race([
+                Promise.all(enrichmentPromises),
+                globalTimeout
+            ]);
+        } catch (error) {
+            // En cas d'erreur, retourner les stations avec address: null
+            return stations.map(station => ({ ...station, address: null }));
+        }
+    };
 
     useEffect(() => {
         const enrichStation = async () => {
@@ -26,7 +63,7 @@ function StationPopup({ station, onClose, onBooking, enrichStationsWithAddresses
         };
 
         enrichStation();
-    }, [station, enrichStationsWithAddresses]);
+    }, [station]);
 
     return (
         <Popup
