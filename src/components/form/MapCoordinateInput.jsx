@@ -31,7 +31,7 @@ function MapCoordinateInput({
     const [viewState, setViewState] = useState({
         longitude: longitude !== null ? longitude : (userLocation?.longitude || 2.2137),
         latitude: latitude !== null ? latitude : (userLocation?.latitude || 46.2276),
-        zoom: latitude !== null && longitude !== null ? 15 : 6
+        zoom: zoom !== null ? 15 : 12
     });
 
     // Mettre à jour uniquement la vue de la carte quand la géolocalisation change (sans remplir les champs)
@@ -54,12 +54,12 @@ function MapCoordinateInput({
             setCoordinates(newCoordinates);
             onCoordinateChange(newCoordinates);
             
-            // Centrer la carte sur les nouvelles coordonnées
+            // Centrer la carte sur les nouvelles coordonnées avec un zoom approprié
             setViewState(prev => ({
                 ...prev,
                 longitude: longitude !== null ? longitude : prev.longitude,
                 latitude: latitude !== null ? latitude : prev.latitude,
-                zoom: zoom !== null ? zoom : prev.zoom
+                zoom: zoom !== null ? zoom : 15  // Zoom plus proche quand on a des coordonnées
             }));
         }
     }, [latitude, longitude]);

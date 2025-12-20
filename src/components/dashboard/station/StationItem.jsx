@@ -2,7 +2,7 @@ import { useState } from "react";
 import UpdateStationForm from "./UpdateStationForm";
 import Button from "../../form/Button";
 
-function StationItem({ station }) {
+function StationItem({ station, place }) {
     const formatPrice = (price) => {
         return new Intl.NumberFormat('fr-FR', {
             style: 'currency',
@@ -78,7 +78,7 @@ function StationItem({ station }) {
                     </div>
                 </div>
 
-                {isEditing && <UpdateStationForm station={station} onClose={toggleEditing} />}
+                {isEditing && <UpdateStationForm station={station} place={place} onClose={toggleEditing} />}
         </li>
     );
 }

@@ -68,7 +68,7 @@ function PlaceCard({ place, onError }) {
             ) : (
                 <ul className="list-group list-group-flush">
                     {place?.charging_stations.map((station) => (
-                        <StationItem key={station.id} station={station} onError={onError} />
+                        <StationItem key={station.id} station={station} place={place} onError={onError} />
                     ))}
                 </ul>
                 
