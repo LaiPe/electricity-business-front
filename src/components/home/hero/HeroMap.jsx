@@ -55,14 +55,25 @@ function HeroMap() {
             return newStations;
         }
         
-        // Créer un Set des IDs existants pour éviter les doublons
-        const existingIds = new Set(prevResults.map(station => station.id));
+        // Créer un Set des IDs des nouvelles stations
+        const newStationIds = new Set(newStations.map(station => station.id));
         
-        // Ajouter seulement les nouvelles stations
+        // Filtrer les stations existantes pour ne garder que celles encore valides
+        const keptStations = prevResults.filter(station => {
+            // Si la station n'est pas dans les nouveaux résultats
+            if (!newStationIds.has(station.id)) {
+                return false; // On la supprime
+            }
+        });
+        
+        // Créer un Set des IDs existants pour éviter les doublons (au cas où)
+        const existingIds = new Set(keptStations.map(station => station.id));
+        
+        // Ajouter seulement les nouvelles stations qui ne sont pas déjà présentes
         const uniqueNewStations = newStations.filter(station => !existingIds.has(station.id));
         
         // Retourner le tableau combiné
-        return [...prevResults, ...uniqueNewStations];
+        return [...keptStations, ...uniqueNewStations];
     };
 
     // Fonction pour créer des clusters
