@@ -1,4 +1,16 @@
-function ActionBookingTable({ bookings, onError, onAccept, onReject, onCancel }) {
+import { useBookingsDispatchMethodsContext } from '../../../contexts/BookingsContext';
+
+function ActionBookingTable({ bookings, onError }) {
+    const { acceptBooking, rejectBooking } = useBookingsDispatchMethodsContext();
+    const onAccept = async (booking) => {
+        try {
+            acceptBooking(booking);
+        } catch (error) {
+            console.error('Erreur lors de l\'acceptation de la réservation:', error);
+            onError('Erreur lors de l\'acceptation de la réservation');
+        }
+    }
+    const onReject = async (bookingId) => {}
     
     const formatDateTime = (dateString) => {
         if (!dateString) return 'Non définie';
@@ -17,7 +29,7 @@ function ActionBookingTable({ bookings, onError, onAccept, onReject, onCancel })
                 <div className="d-flex gap-2">
                     <button 
                         className="btn btn-success btn-sm"
-                        onClick={() => onAccept && onAccept(booking.id)}
+                        onClick={() => onAccept(booking)}
                         title="Accepter la réservation"
                     >
                         <i className="bi bi-check-lg"></i>
@@ -61,6 +73,7 @@ function ActionBookingTable({ bookings, onError, onAccept, onReject, onCancel })
             <table className="table table-striped table-hover">
                 <thead>
                     <tr>
+                        <th>Borne</th>
                         <th>Date et heure début</th>
                         <th>Date et heure fin</th>
                         <th>Propriétaire du véhicule</th>
@@ -72,6 +85,7 @@ function ActionBookingTable({ bookings, onError, onAccept, onReject, onCancel })
                 <tbody>
                     {bookings.map((booking) => (
                         <tr key={booking.id}>
+                            <td>{booking.station.place.name} - {booking.station.name}</td>
                             <td>{formatDateTime(booking.start_date)}</td>
                             <td>{formatDateTime(booking.expected_end_date)}</td>
                             <td>

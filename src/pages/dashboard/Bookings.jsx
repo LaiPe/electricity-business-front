@@ -40,16 +40,25 @@ function Bookings() {
             };
 
             if (isAuthenticated) {
-                try {
-                    setLoading(true);
-                    fetchBookingsAsVehicleOwner();
-                    fetchBookingsAsStationOwner();
-                   
-                } catch (error) {
-                    setError('Erreur chargement réservations');
-                } finally {
-                    setLoading(false);
-                }
+                const loadBookings = async () => {
+                    try {
+                        setLoading(true);
+                        setError('');
+                        
+                        await Promise.all([
+                            fetchBookingsAsVehicleOwner(),
+                            fetchBookingsAsStationOwner()
+                        ]);
+                       
+                    } catch (error) {
+                        console.error('Erreur lors du chargement des réservations:', error);
+                        setError('Erreur chargement réservations');
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+                
+                loadBookings();
             }
         }, [isAuthenticated]);
 

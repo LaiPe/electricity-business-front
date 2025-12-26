@@ -1,43 +1,38 @@
 import { useState } from "react";
 import ActionBookingTable from "./ActionBookingTable";
+import { BookingsProvider, useBookingsContext } from "../../../contexts/BookingsContext";
 
-const isUpcomingBooking = (booking) => {
-    const upcomingStates = ['PENDING_ACCEPT', 'ACCEPTED', 'ONGOING'];
-    return upcomingStates.includes(booking.state);
-}
+
 
 export default function DualBookingView( { bookings, onError, asVehicleOwner, asStationOwner } ) {
+    if (!asVehicleOwner && !asStationOwner) {
+        throw new Error('DualBookingView requires either asVehicleOwner or asStationOwner to be true.');
+    }
     if (asVehicleOwner && asStationOwner) {
-        onError('DualBookingView component cannot be both asVehicleOwner and asStationOwner.');
-        return null;
+        throw new Error('DualBookingView cannot be both asVehicleOwner and asStationOwner.');
     }
 
-    if (asVehicleOwner) {
-        const parsedBookings = {
-            upcoming: bookings.filter(isUpcomingBooking),
-            past: bookings.filter(booking => booking.state === 'COMPLETED'),
-            cancelled: bookings.filter(booking => booking.state === 'CANCELLED' || booking.state === 'REJECTED'),
-        };
-        return <AsVehicleOwnerBookingList bookings={parsedBookings} onError={onError} />;
-    }
+    console.log("DualBookingView bookings:", bookings);
 
-    if (asStationOwner) {
-        const parsedBookings = {
-            pending: bookings.filter(booking => booking.state === 'PENDING_ACCEPT'),
-            accepted: bookings.filter(booking => booking.state === 'ACCEPTED' || booking.state === 'ONGOING'),
-            rejected: bookings.filter(booking => booking.state === 'REJECTED'),
-            past: bookings.filter(booking => booking.state === 'COMPLETED'),
-        };
-        return <AsStationOwnerBookingList bookings={parsedBookings} onError={onError} />;
-    }
+    // Utiliser une key basée sur la longueur des bookings pour forcer le re-mount du provider
+    // quand les données changent (chargement initial -> données chargées)
+    const providerKey = `bookings-${asVehicleOwner ? 'vehicleOwner' : 'stationOwner'}-${bookings?.length ?? 0}`;
 
-    onError('DualBookingView component must be either asVehicleOwner or asStationOwner.');
-    return null;
+    return (
+        <BookingsProvider key={providerKey} initialBookings={bookings} asVehicleOwner={asVehicleOwner} asStationOwner={asStationOwner}>
+            {asVehicleOwner && <AsVehicleOwnerBookingList onError={onError} />}
+            {asStationOwner && <AsStationOwnerBookingList onError={onError} />}
+        </BookingsProvider>
+    );
+    
 }
 
 
-function AsVehicleOwnerBookingList({ bookings, onError }) {
+function AsVehicleOwnerBookingList({ onError }) {
     const [activeTab, setActiveTab] = useState('upcoming');
+    const bookings = useBookingsContext();
+
+    console.log("AsVehicleOwnerBookingList bookings:", bookings);
 
     return (
         <div className="card text-center">
@@ -96,8 +91,11 @@ function AsVehicleOwnerBookingList({ bookings, onError }) {
     );
 }
 
-function AsStationOwnerBookingList({ bookings, onError }) {
+function AsStationOwnerBookingList({ onError }) {
     const [activeTab, setActiveTab] = useState('pending');
+    const bookings = useBookingsContext();
+
+    console.log("AsStationOwnerBookingList bookings:", bookings);
 
     return (
         <div className="card text-center">
@@ -148,7 +146,7 @@ function AsStationOwnerBookingList({ bookings, onError }) {
             <div className="card-body">
                 {activeTab === 'pending' && (
                     <div>
-                        <ActionBookingTable bookings={bookings.pending} onError={onError} />
+                        <ActionBookingTable bookings={bookings?.pending} onError={onError} />
                     </div>
                 )}
                 {activeTab === 'accepted' && (
