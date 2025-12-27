@@ -20,6 +20,7 @@ export function AuthProvider({ children }) {
             
             setIsAuthenticated(true);
             setUser(response.user);
+            return true;
         } catch (error) {
             if (error.cause == 403 && isAuthenticated) {
                 setGlobalError('Votre session a expiré. Veuillez vous reconnecter.');
@@ -28,10 +29,10 @@ export function AuthProvider({ children }) {
             }
             setIsAuthenticated(false);
             setUser(null);
+            return false;
         } finally {
             setLoading(false);
             setInitialLoading(false);
-            return isAuthenticated;
         }
     };
 
