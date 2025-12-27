@@ -13,7 +13,7 @@ const STATUS_LABELS = {
     ACCEPTED: { label: 'Acceptée', className: 'bg-success' },
     REJECTED: { label: 'Refusée', className: 'bg-danger' },
     CANCELLED: { label: 'Annulée', className: 'bg-secondary' },
-    IN_PROGRESS: { label: 'En cours', className: 'bg-info' },
+    ONGOING: { label: 'En cours', className: 'bg-info' },
     COMPLETED: { label: 'Terminée', className: 'bg-primary' },
 };
 
@@ -258,13 +258,28 @@ function GenericBookingTable({
                             )}
                             {showPdfDownload && (
                                 <td>
-                                    <button 
-                                        className="btn btn-primary btn-sm"
-                                        onClick={() => handleDownloadPDF(booking)}
-                                        title="Télécharger le PDF de confirmation"
-                                    >
-                                        <i className="bi bi-file-earmark-pdf"></i>
-                                    </button>
+                                    {(booking.state === 'ACCEPTED' || booking.state === 'ONGOING' || booking.state === 'COMPLETED') ? (
+                                        <button 
+                                            className="btn btn-primary btn-sm"
+                                            onClick={() => handleDownloadPDF(booking)}
+                                            title="Télécharger le PDF de confirmation"
+                                        >
+                                            <i className="bi bi-file-earmark-pdf"></i>
+                                        </button>
+                                    ) : (
+                                        <span 
+                                            className="d-inline-block" 
+                                            title="Disponible après acceptation de la réservation"
+                                        >
+                                            <button 
+                                                className="btn btn-secondary btn-sm" 
+                                                disabled
+                                                style={{ pointerEvents: 'none' }}
+                                            >
+                                                <i className="bi bi-file-earmark-pdf"></i>
+                                            </button>
+                                        </span>
+                                    )}
                                 </td>
                             )}
                             {hasActions && (
