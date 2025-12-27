@@ -4,15 +4,16 @@ import Spinner from '../../components/spinner/Spinner';
 import {getBookingsAsVehicleOwner, getBookingsAsStationOwner, exportBookingsExcelFormat} from '../../services/BookingService';
 import DualBookingView from '../../components/dashboard/booking/DualBookingView';
 import ToggleSwitch from '../../components/form/ToggleSwitch';
+import { useGlobalErrorContext } from '../../contexts/GlobalErrorContext';
 
 
 function Bookings() {
-    const { isAuthenticated } = useAuth();
+    const { setGlobalError } = useGlobalErrorContext();
+    const { isAuthenticated, checkAuthStatus } = useAuth();
 
     const [bookingsAsVehicleOwner, setBookingsAsVehicleOwner] = useState([]);
     const [bookingsAsStationOwner, setBookingsAsStationOwner] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
 
     const fetchBookingsAsVehicleOwner = async () => {
         try {
@@ -41,7 +42,6 @@ function Bookings() {
     const loadBookings = async () => {
         try {
             setLoading(true);
-            setError('');
             
             await Promise.all([
                 fetchBookingsAsVehicleOwner(),
@@ -49,8 +49,9 @@ function Bookings() {
             ]);
             
         } catch (error) {
+            setGlobalError('Erreur lors du chargement des réservations');
             console.error('Erreur lors du chargement des réservations:', error);
-            setError('Erreur chargement réservations');
+            await checkAuthStatus();
         } finally {
             setLoading(false);
         }
@@ -79,7 +80,7 @@ function Bookings() {
             window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error('Erreur lors de l\'export Excel:', error);
-            setError('Erreur lors de l\'export des réservations');
+            setGlobalError('Erreur lors de l\'export des réservations');
         }
     };
 
@@ -92,30 +93,29 @@ function Bookings() {
 
     return (
         <div>
-            {error && (
-                <div className="alert alert-danger d-flex align-items-center mb-4" role="alert">
-                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                    {error}
-                </div>
-            )}
-            
             <div className="d-flex justify-content-between align-items-center mb-2">
                 <h2 className='mb-0'>Mes Réservations</h2>
                 <div className="btn-group">
                     {toggleViewState === 'vehicleOwner' ? (
-                        <button type="button" className="btn btn-outline-primary">
-                            <i className="bi bi-plus-lg me-1"></i>
-                            Nouvelle réservation
-                        </button>
+                        <>
+                            <button type="button" className="btn btn-outline-primary">
+                                <i className="bi bi-plus-lg me-1"></i>
+                                Nouvelle réservation
+                            </button>
+                            <button type="button" className="btn btn-outline-primary" onClick={handleRefreshBookings}>
+                                <i className="bi bi-arrow-clockwise me-1"></i>
+                                Rafraîchir
+                            </button>
+                        </>
                     ) : (
-                        <button type="button" className="btn btn-outline-secondary" onClick={handleRefreshBookings}>
+                        <button type="button" className="btn btn-outline-primary" onClick={handleRefreshBookings}>
                             <i className="bi bi-arrow-clockwise me-1"></i>
                             Rafraîchir
                         </button>
                     )}
                     <button 
                         type="button" 
-                        className={`btn ${toggleViewState === 'vehicleOwner' ? 'btn-primary' : 'btn-secondary'} dropdown-toggle dropdown-toggle-split dropdown-toggle-no-caret`}
+                        className={`btn btn-primary dropdown-toggle dropdown-toggle-split dropdown-toggle-no-caret`}
                         href="#"
                         data-bs-toggle="dropdown" 
                     >
@@ -150,9 +150,9 @@ function Bookings() {
                 </div>
             ) : ( 
                 toggleViewState === 'vehicleOwner' ? (
-                    <DualBookingView bookings={bookingsAsVehicleOwner} onError={setError} asVehicleOwner /> 
+                    <DualBookingView bookings={bookingsAsVehicleOwner} asVehicleOwner /> 
                 ) : (
-                    <DualBookingView bookings={bookingsAsStationOwner} onError={setError} asStationOwner />
+                    <DualBookingView bookings={bookingsAsStationOwner} asStationOwner />
                 )
             )}
         </div>

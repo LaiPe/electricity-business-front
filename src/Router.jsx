@@ -1,5 +1,6 @@
-import { createBrowserRouter, Navigate, Outlet, RouterProvider, useNavigation } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet, Route, RouterProvider, useNavigation } from 'react-router-dom';
 import { useEffect } from 'react';
+
 import Header from './layouts/Header.jsx';
 import Footer from './layouts/Footer.jsx';
 
@@ -19,8 +20,11 @@ import Vehicles from './pages/dashboard/Vehicles.jsx';
 import Stations from './pages/dashboard/Stations.jsx';
 
 import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
-import Spinner from './components/spinner/Spinner.jsx';
+import { GlobalErrorProvider } from './contexts/GlobalErrorContext.jsx';
 import RouteGuard from './RouteGuard.jsx';
+
+import Spinner from './components/spinner/Spinner.jsx';
+
 
 const router = createBrowserRouter([
   {
@@ -99,11 +103,11 @@ function Root({children}) {
     return <Spinner />;
   } else {
     return (
-      <RouteGuard>
-        <Header />
-        {state === 'loading' ? <Spinner /> : children}
-        <Footer />
-      </RouteGuard>
+        <RouteGuard>
+          <Header />
+          {state === 'loading' ? <Spinner /> : children}
+          <Footer />
+        </RouteGuard>
     );
   }
 }
@@ -122,9 +126,12 @@ function LogoutPage() {
 }
 
 export default function Router() {
+  // Envelopper le router avec les fournisseurs de contexte nécessaires
   return (
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <GlobalErrorProvider>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </GlobalErrorProvider>
   );
 }

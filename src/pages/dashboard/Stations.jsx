@@ -3,12 +3,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { getUserPlacesWithStations } from '../../services/StationService';
 import PlaceList from '../../components/dashboard/station/PlaceList';
 import Spinner from '../../components/spinner/Spinner';
+import { useGlobalErrorContext } from '../../contexts/GlobalErrorContext';
 
 function Stations() {
-    const { isAuthenticated } = useAuth();
+    const { setGlobalError } = useGlobalErrorContext();
+    const { isAuthenticated, checkAuthStatus } = useAuth();
+
     const [places, setPlaces] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
 
     useEffect(() => {
             const fetchPlaces = async () => {
@@ -18,7 +20,9 @@ function Stations() {
                     const data = await getUserPlacesWithStations();
                     setPlaces(data);
                 } catch (error) {
-                    setError('Erreur chargement stations:');
+                    setGlobalError('Erreur lors du chargement des lieux et stations');
+                    console.error('Erreur chargement lieux et stations', error);
+                    await checkAuthStatus();
                 } finally {
                     setLoading(false);
                 }
@@ -31,19 +35,12 @@ function Stations() {
 
     return (
         <div>
-            {error && (
-                <div className="alert alert-danger d-flex align-items-center mb-4" role="alert">
-                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                    {error}
-                </div>
-            )}
-            
             {loading ? (
                 <div className="d-flex justify-content-center align-items-center" style={{minHeight: '300px'}}>
                     <Spinner />
                 </div>
             ) : (
-                <PlaceList places={places} onError={setError} />
+                <PlaceList places={places} />
             )}
         </div>
     );

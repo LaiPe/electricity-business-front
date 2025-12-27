@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { apiRequest } from '../utils/ApiRequest';
+import { useGlobalErrorContext } from './GlobalErrorContext';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
+    const {globalError, setGlobalError} = useGlobalErrorContext();
     const [loading, setLoading] = useState(true);
     const [initialLoading, setInitialLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -20,11 +22,13 @@ export function AuthProvider({ children }) {
             setUser(response.user);
             
         } catch (error) {
-            // if (error.cause !== 403) {
-            //     console.error('Erreur lors de la vérification de l\'authentification:', error);
-            // }
-            setIsAuthenticated(false);
-            setUser(null);
+            if (error.cause == 403 && isAuthenticated) {
+                setGlobalError('Votre session a expiré. Veuillez vous reconnecter.');
+                setIsAuthenticated(false);
+                setUser(null);
+            } else if (error.cause != 403) {
+                setGlobalError('Erreur lors de la connexion au serveur. Veuillez réessayer plus tard.');
+            }
         } finally {
             setLoading(false);
             setInitialLoading(false);

@@ -3,12 +3,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { getUserVehicles } from '../../services/VehicleService';
 import VehicleList from '../../components/dashboard/vehicle/VehicleList';
 import Spinner from '../../components/spinner/Spinner';
+import { useGlobalErrorContext } from '../../contexts/GlobalErrorContext';
 
 function Vehicles() {
-    const { isAuthenticated } = useAuth();
+    const { setGlobalError } = useGlobalErrorContext();
+    const { isAuthenticated, checkAuthStatus } = useAuth();
+
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchVehicles = async () => {
@@ -18,7 +20,9 @@ function Vehicles() {
                 const data = await getUserVehicles();
                 setVehicles(data);
             } catch (error) {
-                setError('Erreur chargement véhicules:');
+                setGlobalError('Erreur lors du chargement des véhicules');
+                console.error('Erreur chargement véhicules', error);
+                await checkAuthStatus();
             } finally {
                 setLoading(false);
             }
@@ -31,19 +35,12 @@ function Vehicles() {
 
     return (
         <div>
-            {error && (
-                <div className="alert alert-danger d-flex align-items-center mb-4" role="alert">
-                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                    {error}
-                </div>
-            )}
-            
             {loading ? (
                 <div className="d-flex justify-content-center align-items-center" style={{minHeight: '300px'}}>
                     <Spinner />
                 </div>
             ) : (
-                <VehicleList vehicles={vehicles} onError={setError} />
+                <VehicleList vehicles={vehicles} />
             )}
         </div>
     );
