@@ -1,8 +1,6 @@
 import { useState } from "react";
-import ActionBookingTable from "./ActionBookingTable";
-import BookingTable from "./BookingTable";
-import CancellableBookingTable from "./CancellableBookingTable";
-import SimpleBookingTable from "./SimpleBookingTable";
+import StationOwnerBookingTable from "./StationOwnerBookingTable";
+import VehicleOwnerBookingTable from "./VehicleOwnerBookingTable";
 import { BookingsProvider, useBookingsContext } from "../../../contexts/BookingsContext";
 
 
@@ -76,17 +74,17 @@ function AsVehicleOwnerBookingList({ onError }) {
             <div className="card-body">
                 {activeTab === 'upcoming' && (
                     <div>
-                        <h3>Upcoming Bookings</h3>
+                        <VehicleOwnerBookingTable bookings={bookings?.upcoming} />
                     </div>
                 )}
                 {activeTab === 'past' && (
                     <div>
-                        <h3>Past Bookings</h3>
+                        <VehicleOwnerBookingTable bookings={bookings?.past} />
                     </div>
                 )}
                 {activeTab === 'cancelled' && (
                     <div>
-                        <h3>Cancelled Bookings</h3>
+                        <VehicleOwnerBookingTable bookings={bookings?.cancelled} />
                     </div>
                 )}
             </div>
@@ -159,27 +157,27 @@ function AsStationOwnerBookingList({ onError }) {
             <div className="card-body">
                 {activeTab === 'pending' && (
                     <div>
-                        <ActionBookingTable bookings={bookings?.pending} onError={onError} />
+                        <StationOwnerBookingTable bookings={bookings?.pending} onError={onError} showAcceptReject />
                     </div>
                 )}
                 {activeTab === 'accepted' && (
                     <div>
-                        <CancellableBookingTable bookings={bookings?.accepted} onError={onError} />
+                        <StationOwnerBookingTable bookings={bookings?.accepted} onError={onError} showCancel showPdfDownload />
                     </div>
                 )}
                 {activeTab === 'rejected' && (
                     <div>
-                        <SimpleBookingTable bookings={bookings?.rejected} />
+                        <StationOwnerBookingTable bookings={bookings?.rejected} />
                     </div>
                 )}
                 {activeTab === 'cancelled' && (
                     <div>
-                        <SimpleBookingTable bookings={bookings?.cancelled} />
+                        <StationOwnerBookingTable bookings={bookings?.cancelled} />
                     </div>
                 )}
                 {activeTab === 'past' && (
                     <div>
-                        <BookingTable bookings={bookings?.past} onError={onError} />
+                        <StationOwnerBookingTable bookings={bookings?.past} onError={onError} showPdfDownload />
                     </div>
                 )}
                 

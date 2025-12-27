@@ -28,8 +28,12 @@ export const apiRequest = async (endpoint, method = 'GET', body = null) => {
             return await response.json();
         }
         
-        // Gérer les fichiers binaires (PDF, images, etc.)
-        if (contentType && (contentType.includes('application/pdf') || contentType.includes('application/octet-stream'))) {
+        // Gérer les fichiers binaires (PDF, Excel, images, etc.)
+        if (contentType && (
+            contentType.includes('application/pdf') || 
+            contentType.includes('application/octet-stream') ||
+            contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        )) {
             return await response.blob();
         }
         

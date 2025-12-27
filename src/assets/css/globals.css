@@ -28,3 +28,7 @@
 body {
     overflow-x: hidden;
 }
+
+.dropdown-toggle-no-caret::after {
+    display: none !important;
+}
