@@ -63,6 +63,26 @@ function GenericBookingTable({
         });
     };
 
+    const calculateDuration = (startDate, endDate) => {
+        if (!startDate || !endDate) return 'Non définie';
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const diffMs = end - start;
+        
+        if (diffMs < 0) return 'Invalide';
+        
+        const diffMinutes = Math.floor(diffMs / (1000 * 60));
+        const hours = Math.floor(diffMinutes / 60);
+        const minutes = diffMinutes % 60;
+        
+        if (hours === 0) {
+            return `${minutes} min`;
+        } else if (minutes === 0) {
+            return `${hours}h`;
+        }
+        return `${hours}h${minutes.toString().padStart(2, '0')}`;
+    };
+
     const handleAccept = async (booking) => {
         await execute(() => acceptBookingAPI(booking.id), {
             onSuccess: () => acceptBooking && acceptBooking(booking)
@@ -133,10 +153,8 @@ function GenericBookingTable({
                     <tr>
                         {isVehicleOwnerView ? (
                             <>
-                                <th scope="col">Modèle du véhicule</th>
-                                <th scope="col">Immatriculation</th>
-                                <th scope="col">Date et heure début</th>
-                                <th scope="col">Date et heure fin</th>
+                                <th scope="col">Véhicule</th>
+                                <th scope="col">Date et durée</th>
                                 <th scope="col">Propriétaire de la borne</th>
                                 <th scope="col">Borne</th>
                                 {showStatus && <th scope="col">Statut</th>}
@@ -146,11 +164,9 @@ function GenericBookingTable({
                         ) : (
                             <>
                                 <th scope="col">Borne</th>
-                                <th scope="col">Date et heure début</th>
-                                <th scope="col">Date et heure fin</th>
+                                <th scope="col">Date et durée</th>
                                 <th scope="col">Propriétaire du véhicule</th>
-                                <th scope="col">Modèle du véhicule</th>
-                                <th scope="col">Immatriculation</th>
+                                <th scope="col">Véhicule</th>
                                 {showStatus && <th scope="col">Statut</th>}
                                 {showPdfDownload && <th scope="col">Confirmation</th>}
                                 {hasActions && <th scope="col">Actions</th>}
@@ -167,23 +183,30 @@ function GenericBookingTable({
                             {isVehicleOwnerView ? (
                                 <>
                                     <td>
-                                        {booking.vehicle?.vehicle_model?.make} {booking.vehicle?.vehicle_model?.model}
+                                        <div>
+                                            {booking.vehicle?.vehicle_model?.make} {booking.vehicle?.vehicle_model?.model}
+                                        </div>
+                                        <small className="text-muted">
+                                            <code className="text-primary">{booking.vehicle?.registration_number}</code>
+                                        </small>
                                     </td>
                                     <td>
-                                        <code className="text-primary">{booking.vehicle?.registration_number}</code>
+                                        <div>{formatDateTime(booking.start_date)}</div>
+                                        <small className="text-muted">
+                                            <i className="bi bi-clock me-1"></i>
+                                            {calculateDuration(booking.start_date, booking.expected_end_date)}
+                                        </small>
                                     </td>
-                                    <td>{formatDateTime(booking.start_date)}</td>
-                                    <td>{formatDateTime(booking.expected_end_date)}</td>
                                     <td>
                                         {booking.station?.owner?.first_name} {booking.station?.owner?.last_name}
                                     </td>
                                     <td>
-                                        <div className="d-flex align-items-center justify-content-center gap-3">
+                                        <div className="d-flex align-items-center justify-content-center flex-column gap-1">
                                             <span>{booking.station?.name}</span>
                                             {showLocateStation && booking.station && (
                                                 <button 
                                                     type="button"
-                                                    className="btn btn-outline-primary btn-sm"
+                                                    className="btn btn-outline-primary btn-sm mb-1"
                                                     onClick={() => handleLocateStation(booking.station)}
                                                     title="Localiser la borne"
                                                 >
@@ -216,22 +239,27 @@ function GenericBookingTable({
                                             )}
                                         </div>
                                     </td>
-                                    <td>{formatDateTime(booking.start_date)}</td>
-                                    <td>{formatDateTime(booking.expected_end_date)}</td>
+                                    <td>
+                                        <div>{formatDateTime(booking.start_date)}</div>
+                                        <small className="text-muted">
+                                            <i className="bi bi-clock me-1"></i>
+                                            {calculateDuration(booking.start_date, booking.expected_end_date)}
+                                        </small>
+                                    </td>
                                     <td>
                                         {booking.vehicle?.owner?.first_name && booking.vehicle?.owner?.last_name 
                                             ? `${booking.vehicle.owner.first_name} ${booking.vehicle.owner.last_name}`
                                             : 'Non disponible'}
                                     </td>
                                     <td>
-                                        {booking.vehicle?.vehicle_model 
-                                            ? `${booking.vehicle.vehicle_model.make} ${booking.vehicle.vehicle_model.model} ${booking.vehicle.vehicle_model.year || ''}`
-                                            : 'Non disponible'}
-                                    </td>
-                                    <td>
-                                        <code className="text-primary">
-                                            {booking.vehicle?.registration_number || 'Non disponible'}
-                                        </code>
+                                        <div>
+                                            {booking.vehicle?.vehicle_model 
+                                                ? `${booking.vehicle.vehicle_model.make} ${booking.vehicle.vehicle_model.model} ${booking.vehicle.vehicle_model.year || ''}`
+                                                : 'Non disponible'}
+                                        </div>
+                                        <small className="text-muted">
+                                            <code className="text-primary">{booking.vehicle?.registration_number || 'Non disponible'}</code>
+                                        </small>
                                     </td>
                                 </>
                             )}

@@ -183,8 +183,7 @@ function AsStationOwnerBookingList() {
                     <div>
                         <GenericBookingTable 
                             bookings={bookings?.accepted} 
-                            showPdfDownload 
-                            showLocateStation 
+                            showPdfDownload
                         />
                     </div>
                 )}
