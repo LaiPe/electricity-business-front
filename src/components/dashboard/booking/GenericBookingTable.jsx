@@ -6,6 +6,7 @@ import {
     cancelBooking as cancelBookingAPI, 
     getBookingPdf 
 } from '../../../services/BookingService';
+import { useApiCall } from '../../../hooks/useApiCall';
 import StationLocationModal from './StationLocationModal';
 
 const STATUS_LABELS = {
@@ -22,7 +23,6 @@ const STATUS_LABELS = {
  * 
  * @param {Object} props
  * @param {Array} props.bookings - Liste des réservations
- * @param {Function} props.onError - Callback pour gérer les erreurs
  * @param {boolean} props.showAcceptReject - Afficher les boutons accepter/refuser (pour les réservations en attente)
  * @param {boolean} props.showCancel - Afficher le bouton annuler
  * @param {boolean} props.showPdfDownload - Afficher le bouton de téléchargement PDF
@@ -32,7 +32,6 @@ const STATUS_LABELS = {
  */
 function GenericBookingTable({ 
     bookings, 
-    onError,
     showAcceptReject = false,
     showCancel = false,
     showPdfDownload = false,
@@ -40,6 +39,7 @@ function GenericBookingTable({
     showStatus = false,
     isVehicleOwnerView = false
 }) {
+    const { execute } = useApiCall();
     const [selectedStation, setSelectedStation] = useState(null);
     
     // Utiliser le contexte seulement si on a besoin des actions
@@ -64,23 +64,15 @@ function GenericBookingTable({
     };
 
     const handleAccept = async (booking) => {
-        try {
-            await acceptBookingAPI(booking.id);
-            acceptBooking && acceptBooking(booking);
-        } catch (error) {
-            console.error('Erreur lors de l\'acceptation de la réservation:', error);
-            onError && onError('Erreur lors de l\'acceptation de la réservation');
-        }
+        await execute(() => acceptBookingAPI(booking.id), {
+            onSuccess: () => acceptBooking && acceptBooking(booking)
+        });
     };
 
     const handleReject = async (booking) => {
-        try {
-            await rejectBookingAPI(booking.id);
-            rejectBooking && rejectBooking(booking);
-        } catch (error) {
-            console.error('Erreur lors du refus de la réservation:', error);
-            onError && onError('Erreur lors du refus de la réservation');
-        }
+        await execute(() => rejectBookingAPI(booking.id), {
+            onSuccess: () => rejectBooking && rejectBooking(booking)
+        });
     };
 
     const handleCancel = async (booking) => {
@@ -90,31 +82,25 @@ function GenericBookingTable({
         const confirmMessage = `Êtes-vous sûr de vouloir annuler cette réservation ?\n\nBorne : ${stationName}\nDate : ${startDate}`;
         
         if (window.confirm(confirmMessage)) {
-            try {
-                await cancelBookingAPI(booking.id);
-                cancelBooking && cancelBooking(booking);
-            } catch (error) {
-                console.error('Erreur lors de l\'annulation de la réservation:', error);
-                onError && onError('Erreur lors de l\'annulation de la réservation');
-            }
+            await execute(() => cancelBookingAPI(booking.id), {
+                onSuccess: () => cancelBooking && cancelBooking(booking)
+            });
         }
     };
 
     const handleDownloadPDF = async (booking) => {
-        try {
-            const blob = await getBookingPdf(booking.id);
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `booking_${booking.id}.pdf`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Erreur lors du téléchargement du PDF:', error);
-            onError && onError('Erreur lors du téléchargement du PDF de confirmation');
-        }
+        await execute(() => getBookingPdf(booking.id), {
+            onSuccess: (blob) => {
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `booking_${booking.id}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            }
+        });
     };
 
     const handleLocateStation = (station) => {

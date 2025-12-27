@@ -20,18 +20,18 @@ export function AuthProvider({ children }) {
             
             setIsAuthenticated(true);
             setUser(response.user);
-            
         } catch (error) {
             if (error.cause == 403 && isAuthenticated) {
                 setGlobalError('Votre session a expiré. Veuillez vous reconnecter.');
-                setIsAuthenticated(false);
-                setUser(null);
             } else if (error.cause != 403) {
                 setGlobalError('Erreur lors de la connexion au serveur. Veuillez réessayer plus tard.');
             }
+            setIsAuthenticated(false);
+            setUser(null);
         } finally {
             setLoading(false);
             setInitialLoading(false);
+            return isAuthenticated;
         }
     };
 

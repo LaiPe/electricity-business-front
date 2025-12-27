@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { searchVehiclesModels } from '../../../services/VehicleService';
+import { useApiCall } from '../../../hooks/useApiCall';
 import SearchInput from '../../form/SearchInput';
 
 /**
@@ -9,7 +10,6 @@ import SearchInput from '../../form/SearchInput';
  * @param {string} props.name - Nom de l'input
  * @param {string} props.initialValue - Valeur initiale
  * @param {Function} props.onSelect - Fonction de sélection d'un modèle
- * @param {Function} props.onError - Fonction de gestion d'erreur
  * @param {Function} props.onClearSelection - Fonction appelée quand la sélection est supprimée
  * @param {boolean} props.required - Champ obligatoire
  * @param {boolean} props.disabled - Champ désactivé
@@ -21,7 +21,6 @@ function VehicleModelSearchInput({
     name = "searchQuery",
     initialValue = '',
     onSelect,
-    onError,
     onClearSelection,
     required = false,
     disabled = false,
@@ -30,6 +29,7 @@ function VehicleModelSearchInput({
     className = '',
     ...props
 }) {
+    const { execute } = useApiCall();
     const [searchValue, setSearchValue] = useState(initialValue);
     const [selectedModel, setSelectedModel] = useState(initialSelectedModel);
 
@@ -56,16 +56,14 @@ function VehicleModelSearchInput({
     };
 
     const handleVehicleModelSearch = async (query) => {
-        try {
-            const models = await searchVehiclesModels(query);
-            return models || [];
-        } catch (error) {
-            if (onError) {
-                onError('Erreur lors de la recherche des modèles');
-            }
-            console.error('Erreur recherche modèles:', error);
-            return [];
-        }
+        let results = [];
+        await execute(() => searchVehiclesModels(query), {
+            onSuccess: (models) => {
+                results = models || [];
+            },
+            showGlobalError: false
+        });
+        return results;
     };
 
     const handleModelSelect = (model) => {

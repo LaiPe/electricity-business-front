@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { updateStation } from '../../../services/StationService';
 import { useListDispatchMethodsContext } from '../../../contexts/ListContext';
+import { useApiCall } from '../../../hooks/useApiCall';
 import MapCoordinateInput from "../../form/MapCoordinateInput";
 import Input from "../../form/Input";
 import Button from "../../form/Button";
 
 function UpdateStationForm({ station, place, onClose }) {
+    const { execute, loading } = useApiCall();
     const [formData, setFormData] = useState({
         name: '',
         latitude: null,
@@ -16,8 +18,6 @@ function UpdateStationForm({ station, place, onClose }) {
     });
 
     const [errors, setErrors] = useState({});
-    const [generalError, setGeneralError] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
     
     const { updateItem } = useListDispatchMethodsContext();
 
@@ -47,11 +47,6 @@ function UpdateStationForm({ station, place, onClose }) {
                 ...prev,
                 [field]: null
             }));
-        }
-
-        // Effacer l'erreur générale
-        if (generalError) {
-            setGeneralError('');
         }
     };
 
@@ -114,46 +109,32 @@ function UpdateStationForm({ station, place, onClose }) {
             console.log('Erreurs de validation:', errors);
             return;
         }
-
-        setIsSubmitting(true);
         
-        try {
-            const stationData = {
-                name: formData.name.trim(),
-                latitude: parseFloat(formData.latitude),
-                longitude: parseFloat(formData.longitude),
-                price_per_kwh: parseFloat(formData.price_per_kwh),
-                power_kw: parseFloat(formData.power_kw),
-                instructions: formData.instructions.trim() || null
-            };
+        const stationData = {
+            name: formData.name.trim(),
+            latitude: parseFloat(formData.latitude),
+            longitude: parseFloat(formData.longitude),
+            price_per_kwh: parseFloat(formData.price_per_kwh),
+            power_kw: parseFloat(formData.power_kw),
+            instructions: formData.instructions.trim() || null
+        };
 
-            console.log('Données validées, mise à jour de la station avec:', stationData);
+        console.log('Données validées, mise à jour de la station avec:', stationData);
 
-            // Mettre à jour la station via l'API
-            const updatedStation = await updateStation(station.id, stationData);
-            
-            // Mettre à jour la liste locale en remplaçant la station dans le lieu correspondant
-            const updatedPlace = {
-                ...place,
-                charging_stations: place.charging_stations.map(s => 
-                    s.id === station.id ? updatedStation : s
-                )
-            };
-            
-            updateItem(updatedPlace);
-            
-            // Fermer la modal
-            if (onClose) {
-                onClose();
+        await execute(() => updateStation(station.id, stationData), {
+            onSuccess: (updatedStation) => {
+                const updatedPlace = {
+                    ...place,
+                    charging_stations: place.charging_stations.map(s => 
+                        s.id === station.id ? updatedStation : s
+                    )
+                };
+                updateItem(updatedPlace);
+                if (onClose) {
+                    onClose();
+                }
             }
-            
-        } catch (error) {
-            console.error('Erreur lors de la mise à jour de la station:', error);
-            const errorMessage = error?.message || 'Erreur lors de la mise à jour de la station';
-            setErrors({ submit: errorMessage });
-        } finally {
-            setIsSubmitting(false);
-        }
+        });
     };
 
     const handleCancel = () => {

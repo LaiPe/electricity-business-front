@@ -4,7 +4,7 @@ import { BookingsProvider, useBookingsContext } from "../../../contexts/Bookings
 
 
 
-export default function DualBookingView( { bookings, onError, asVehicleOwner, asStationOwner } ) {
+export default function DualBookingView( { bookings, asVehicleOwner, asStationOwner } ) {
     if (!asVehicleOwner && !asStationOwner) {
         throw new Error('DualBookingView requires either asVehicleOwner or asStationOwner to be true.');
     }
@@ -20,15 +20,15 @@ export default function DualBookingView( { bookings, onError, asVehicleOwner, as
 
     return (
         <BookingsProvider key={providerKey} initialBookings={bookings} asVehicleOwner={asVehicleOwner} asStationOwner={asStationOwner}>
-            {asVehicleOwner && <AsVehicleOwnerBookingList onError={onError} />}
-            {asStationOwner && <AsStationOwnerBookingList onError={onError} />}
+            {asVehicleOwner && <AsVehicleOwnerBookingList />}
+            {asStationOwner && <AsStationOwnerBookingList />}
         </BookingsProvider>
     );
     
 }
 
 
-function AsVehicleOwnerBookingList({ onError }) {
+function AsVehicleOwnerBookingList() {
     const [activeTab, setActiveTab] = useState('upcoming');
     const bookings = useBookingsContext();
 
@@ -73,17 +73,34 @@ function AsVehicleOwnerBookingList({ onError }) {
             <div className="card-body">
                 {activeTab === 'upcoming' && (
                     <div>
-                        <GenericBookingTable bookings={bookings?.upcoming} showStatus showCancel showPdfDownload showLocateStation isVehicleOwnerView />
+                        <GenericBookingTable 
+                            bookings={bookings?.upcoming} 
+                            showStatus 
+                            showCancel 
+                            showPdfDownload 
+                            showLocateStation 
+                            isVehicleOwnerView 
+                        />
                     </div>
                 )}
                 {activeTab === 'past' && (
                     <div>
-                        <GenericBookingTable bookings={bookings?.past} showStatus showLocateStation isVehicleOwnerView />
+                        <GenericBookingTable 
+                            bookings={bookings?.past} 
+                            showStatus 
+                            showLocateStation 
+                            isVehicleOwnerView 
+                        />
                     </div>
                 )}
                 {activeTab === 'cancelled' && (
                     <div>
-                        <GenericBookingTable bookings={bookings?.cancelled} showStatus showLocateStation isVehicleOwnerView />
+                        <GenericBookingTable 
+                            bookings={bookings?.cancelled} 
+                            showStatus 
+                            showLocateStation 
+                            isVehicleOwnerView 
+                        />
                     </div>
                 )}
             </div>
@@ -91,7 +108,7 @@ function AsVehicleOwnerBookingList({ onError }) {
     );
 }
 
-function AsStationOwnerBookingList({ onError }) {
+function AsStationOwnerBookingList() {
     const [activeTab, setActiveTab] = useState('pending');
     const bookings = useBookingsContext();
 
@@ -156,27 +173,41 @@ function AsStationOwnerBookingList({ onError }) {
             <div className="card-body">
                 {activeTab === 'pending' && (
                     <div>
-                        <GenericBookingTable bookings={bookings?.pending} onError={onError} showAcceptReject />
+                        <GenericBookingTable 
+                            bookings={bookings?.pending} 
+                            showAcceptReject 
+                        />
                     </div>
                 )}
                 {activeTab === 'accepted' && (
                     <div>
-                        <GenericBookingTable bookings={bookings?.accepted} onError={onError} showCancel showPdfDownload />
+                        <GenericBookingTable 
+                            bookings={bookings?.accepted} 
+                            showPdfDownload 
+                            showLocateStation 
+                        />
                     </div>
                 )}
                 {activeTab === 'rejected' && (
                     <div>
-                        <GenericBookingTable bookings={bookings?.rejected} />
+                        <GenericBookingTable 
+                            bookings={bookings?.rejected} 
+                        />
                     </div>
                 )}
                 {activeTab === 'cancelled' && (
                     <div>
-                        <GenericBookingTable bookings={bookings?.cancelled} />
+                        <GenericBookingTable 
+                            bookings={bookings?.cancelled} 
+                        />
                     </div>
                 )}
                 {activeTab === 'past' && (
                     <div>
-                        <GenericBookingTable bookings={bookings?.past} onError={onError} showPdfDownload />
+                        <GenericBookingTable 
+                            bookings={bookings?.past} 
+                            showPdfDownload 
+                        />
                     </div>
                 )}
                 

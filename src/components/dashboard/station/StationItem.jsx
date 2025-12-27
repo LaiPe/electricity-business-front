@@ -3,6 +3,7 @@ import UpdateStationForm from "./UpdateStationForm";
 import Button from "../../form/Button";
 import { deleteStation } from "../../../services/StationService";
 import { useListDispatchMethodsContext } from "../../../contexts/ListContext";
+import { useApiCall } from '../../../hooks/useApiCall';
 
 function StationItem({ station, place }) {
     const formatPrice = (price) => {
@@ -13,8 +14,8 @@ function StationItem({ station, place }) {
         }).format(price);
     };
 
+    const { execute, loading } = useApiCall();
     const [isEditing, setIsEditing] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
     const { updateItem } = useListDispatchMethodsContext();
     
     const toggleEditing = () => {
@@ -30,27 +31,16 @@ function StationItem({ station, place }) {
         if (!confirmDelete) {
             return;
         }
-
-        setIsDeleting(true);
         
-        try {
-            // Supprimer la station via l'API
-            await deleteStation(station.id);
-            
-            // Mettre à jour la liste locale en retirant la station du lieu
-            const updatedPlace = {
-                ...place,
-                charging_stations: place.charging_stations.filter(s => s.id !== station.id)
-            };
-            
-            updateItem(updatedPlace);
-            
-        } catch (error) {
-            console.error('Erreur lors de la suppression de la station:', error);
-            alert('Erreur lors de la suppression de la station. Veuillez réessayer.');
-        } finally {
-            setIsDeleting(false);
-        }
+        await execute(() => deleteStation(station.id), {
+            onSuccess: () => {
+                const updatedPlace = {
+                    ...place,
+                    charging_stations: place.charging_stations.filter(s => s.id !== station.id)
+                };
+                updateItem(updatedPlace);
+            }
+        });
     }
 
     return (
@@ -90,8 +80,8 @@ function StationItem({ station, place }) {
                             variant="outline-danger" 
                             title="Supprimer la borne"
                             onClick={handleDelete}
-                            disabled={isDeleting}
-                            loading={isDeleting}
+                            disabled={loading}
+                            loading={loading}
                             loadingText="Suppression..."
                         >
                             <i className="bi bi-trash"></i>

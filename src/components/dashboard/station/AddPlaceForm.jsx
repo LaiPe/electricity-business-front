@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { addPlace } from '../../../services/StationService';
 import { useListDispatchMethodsContext } from '../../../contexts/ListContext';
+import { useApiCall } from '../../../hooks/useApiCall';
 import Input from '../../form/Input';
 import Button from '../../form/Button';
 
 function AddPlaceForm({ onClose }) {
+    const { execute, loading } = useApiCall();
     const [formData, setFormData] = useState({
         name: '',
         description: ''
     });
     const [errors, setErrors] = useState({});
-    const [generalError, setGeneralError] = useState('');
-    const [loading, setLoading] = useState(false);
     
     const { addItem } = useListDispatchMethodsContext();
 
@@ -28,11 +28,6 @@ function AddPlaceForm({ onClose }) {
                 ...prev,
                 [name]: ''
             }));
-        }
-        
-        // Effacer l'erreur générale
-        if (generalError) {
-            setGeneralError('');
         }
     };
 
@@ -56,33 +51,20 @@ function AddPlaceForm({ onClose }) {
             return;
         }
         
-        try {
-            setLoading(true);
-            setGeneralError('');
-            
-            const placeData = {
-                name: formData.name.trim(),
-                description: formData.description.trim()
-            };
-            
-            const newPlace = await addPlace(placeData);
-            newPlace.charging_stations = [];
-            
-            // Ajouter la place à la liste locale
-            addItem(newPlace);
-            
-            // Fermer la modale
-            if (onClose) {
-                onClose();
+        const placeData = {
+            name: formData.name.trim(),
+            description: formData.description.trim()
+        };
+        
+        await execute(() => addPlace(placeData), {
+            onSuccess: (newPlace) => {
+                newPlace.charging_stations = [];
+                addItem(newPlace);
+                if (onClose) {
+                    onClose();
+                }
             }
-            
-        } catch (error) {
-            const errorMessage = error?.message || 'Erreur lors de l\'ajout du lieu';
-            setGeneralError(errorMessage);
-            console.error('Erreur ajout lieu:', error);
-        } finally {
-            setLoading(false);
-        }
+        });
     };
 
     const handleClose = () => {
@@ -91,7 +73,6 @@ function AddPlaceForm({ onClose }) {
             description: ''
         });
         setErrors({});
-        setGeneralError('');
         if (onClose) {
             onClose();
         }
@@ -116,17 +97,6 @@ function AddPlaceForm({ onClose }) {
                     
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
-                            {generalError && (
-                                <div className="alert alert-danger d-flex align-items-center mb-3" role="alert">
-                                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                                    <div>{generalError}</div>
-                                    <button 
-                                        type="button" 
-                                        className="btn-close ms-auto" 
-                                        onClick={() => setGeneralError('')}
-                                    ></button>
-                                </div>
-                            )}
 
                             <Input
                                 id="name"

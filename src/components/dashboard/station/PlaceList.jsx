@@ -3,17 +3,17 @@ import PlaceCard from './PlaceCard';
 import AddPlaceForm from './AddPlaceForm';
 import { useState } from 'react';
 
-function PlaceList({ places, onError }) {
+function PlaceList({ places }) {
     return (
         <div>
             <ListProvider initialItems={places}>
-                <PlaceListContent onError={onError} />
+                <PlaceListContent />
             </ListProvider>
         </div>
     );
 }
 
-function PlaceListContent({ onError }) {
+function PlaceListContent() {
     const places = useListContext();
     const [openedAddForm, setOpenedAddForm] = useState(false);
     
@@ -44,7 +44,7 @@ function PlaceListContent({ onError }) {
             ) : (
                 <div className="d-flex flex-wrap gap-4">
                     {places.map((place) => (
-                        <PlaceCard key={place.id} place={place} onError={onError} />
+                        <PlaceCard key={place.id} place={place} />
                     ))}
                 </div>
             )}

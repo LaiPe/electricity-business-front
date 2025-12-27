@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { deletePlace } from '../../../services/StationService';
 import { useListDispatchMethodsContext } from '../../../contexts/ListContext';
+import { useApiCall } from '../../../hooks/useApiCall';
 import AddStationForm from "./AddStationForm";
 import UpdatePlaceForm from "./UpdatePlaceForm";
 import Button from "../../form/Button";
 import StationItem from "./StationItem";
 
-function PlaceCard({ place, onError }) {
+function PlaceCard({ place }) {
+    const { execute, loading } = useApiCall();
     const { deleteItem } = useListDispatchMethodsContext();
     const [openedAddForm, setOpenedAddForm] = useState(false);
     const toggleAddForm = () => {
@@ -20,14 +22,9 @@ function PlaceCard({ place, onError }) {
 
     const handleDelete = async () => {
         if (window.confirm('Êtes-vous sûr de vouloir supprimer ce lieu et toutes ses bornes de recharge ?')) {
-            try {
-                await deletePlace(place.id);
-                deleteItem(place);
-            } catch (error) {
-                const errorMessage = error?.message || 'Erreur lors de la suppression du lieu';
-                onError(errorMessage);
-                console.error('Erreur suppression lieu:', error);
-            }
+            await execute(() => deletePlace(place.id), {
+                onSuccess: () => deleteItem(place)
+            });
         }
     };
     
@@ -68,7 +65,7 @@ function PlaceCard({ place, onError }) {
             ) : (
                 <ul className="list-group list-group-flush">
                     {place?.charging_stations.map((station) => (
-                        <StationItem key={station.id} station={station} place={place} onError={onError} />
+                        <StationItem key={station.id} station={station} place={place} />
                     ))}
                 </ul>
                 

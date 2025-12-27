@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { addStation } from '../../../services/StationService';
 import { useListDispatchMethodsContext } from '../../../contexts/ListContext';
+import { useApiCall } from '../../../hooks/useApiCall';
 import MapCoordinateInput from "../../form/MapCoordinateInput";
 import Input from "../../form/Input";
 import Button from "../../form/Button";
 
 function AddStationForm({ onClose, place }) {
+    const { execute, loading } = useApiCall();
     const [formData, setFormData] = useState({
         name: '',
         latitude: null,
@@ -14,11 +16,7 @@ function AddStationForm({ onClose, place }) {
         power_kw: '',
         instructions: ''
     });
-
     const [errors, setErrors] = useState({});
-    const [generalError, setGeneralError] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    
     const { updateItem } = useListDispatchMethodsContext();
 
     const handleInputChange = (field, value) => {
@@ -33,11 +31,6 @@ function AddStationForm({ onClose, place }) {
                 ...prev,
                 [field]: null
             }));
-        }
-
-        // Effacer l'erreur générale
-        if (generalError) {
-            setGeneralError('');
         }
     };
 
@@ -100,43 +93,30 @@ function AddStationForm({ onClose, place }) {
             console.log('Erreurs de validation:', errors);
             return;
         }
-
-        setIsSubmitting(true);
         
-        try {
-            const stationData = {
-                name: formData.name.trim(),
-                latitude: parseFloat(formData.latitude),
-                longitude: parseFloat(formData.longitude),
-                price_per_kwh: parseFloat(formData.price_per_kwh),
-                power_kw: parseFloat(formData.power_kw),
-                instructions: formData.instructions.trim() || null,
-                place_id: parseInt(place.id)
-            };
+        const stationData = {
+            name: formData.name.trim(),
+            latitude: parseFloat(formData.latitude),
+            longitude: parseFloat(formData.longitude),
+            price_per_kwh: parseFloat(formData.price_per_kwh),
+            power_kw: parseFloat(formData.power_kw),
+            instructions: formData.instructions.trim() || null,
+            place_id: parseInt(place.id)
+        };
 
-            console.log('Données validées, création de la station avec:', stationData);
+        console.log('Données validées, création de la station avec:', stationData);
 
-            // Créer la station via l'API
-            const newStation = await addStation(stationData);
-            
-            // Mettre à jour la liste locale en ajoutant la station au lieu correspondant
-            updateItem({
-                ...place,
-                charging_stations: [...(place.charging_stations || []), newStation]
-            });
-            
-            // Fermer la modal
-            if (onClose) {
-                onClose();
+        await execute(() => addStation(stationData), {
+            onSuccess: (newStation) => {
+                updateItem({
+                    ...place,
+                    charging_stations: [...(place.charging_stations || []), newStation]
+                });
+                if (onClose) {
+                    onClose();
+                }
             }
-            
-        } catch (error) {
-            console.error('Erreur lors de la création de la station:', error);
-            const errorMessage = error?.message || 'Erreur lors de la création de la station';
-            setErrors({ submit: errorMessage });
-        } finally {
-            setIsSubmitting(false);
-        }
+        });
     };
 
     const handleCancel = () => {
@@ -169,7 +149,7 @@ function AddStationForm({ onClose, place }) {
                             type="button" 
                             className="btn-close" 
                             onClick={handleCancel}
-                            disabled={isSubmitting}
+                            disabled={loading}
                             aria-label="Close"
                         ></button>
                     </div>
@@ -202,7 +182,7 @@ function AddStationForm({ onClose, place }) {
                                         required
                                         placeholder="Ex: Borne de recharge Centre-ville"
                                         helpText="Ce nom sera affiché aux utilisateurs pour identifier la station."
-                                        disabled={isSubmitting}
+                                        disabled={loading}
                                         maxLength="100"
                                     />
                                 </div>
@@ -220,7 +200,7 @@ function AddStationForm({ onClose, place }) {
                                         placeholder="Ex: 0.15"
                                         min="0"
                                         step="0.01"
-                                        disabled={isSubmitting}
+                                        disabled={loading}
                                     />
                                 </div>
 
@@ -238,7 +218,7 @@ function AddStationForm({ onClose, place }) {
                                         placeholder="Ex: 7"
                                         min="0"
                                         step="0.1"
-                                        disabled={isSubmitting}
+                                        disabled={loading}
                                     />
                                 </div>
                             </div>
@@ -254,7 +234,7 @@ function AddStationForm({ onClose, place }) {
                                         onCoordinateChange={handleCoordinateChange}
                                         error={errors.coordinates}
                                         required
-                                        disabled={isSubmitting}
+                                        disabled={loading}
                                     />
                                 </div>
 
@@ -271,7 +251,7 @@ function AddStationForm({ onClose, place }) {
                                         onChange={(e) => handleInputChange('instructions', e.target.value)}
                                         placeholder="Instructions spéciales pour l'utilisation de cette borne..."
                                         rows="3"
-                                        disabled={isSubmitting}
+                                        disabled={loading}
                                         maxLength="500"
                                     />
                                     {errors.instructions && (
@@ -291,14 +271,14 @@ function AddStationForm({ onClose, place }) {
                                 type="button"
                                 variant="secondary"
                                 onClick={handleCancel}
-                                disabled={isSubmitting}
+                                disabled={loading}
                             >
                                 Annuler
                             </Button>
                             <Button
                                 type="submit"
                                 variant="primary"
-                                loading={isSubmitting}
+                                loading={loading}
                                 loadingText="Création en cours..."
                             >
                                 <i className="bi bi-plus-circle me-2"></i>

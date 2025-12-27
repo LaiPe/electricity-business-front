@@ -4,57 +4,30 @@ import Spinner from '../../components/spinner/Spinner';
 import {getBookingsAsVehicleOwner, getBookingsAsStationOwner, exportBookingsExcelFormat} from '../../services/BookingService';
 import DualBookingView from '../../components/dashboard/booking/DualBookingView';
 import ToggleSwitch from '../../components/form/ToggleSwitch';
-import { useGlobalErrorContext } from '../../contexts/GlobalErrorContext';
+import { useApiCall } from '../../hooks/useApiCall';
 
 
 function Bookings() {
-    const { setGlobalError } = useGlobalErrorContext();
-    const { isAuthenticated, checkAuthStatus } = useAuth();
+    const { execute } = useApiCall();
+    const { isAuthenticated } = useAuth();
 
     const [bookingsAsVehicleOwner, setBookingsAsVehicleOwner] = useState([]);
     const [bookingsAsStationOwner, setBookingsAsStationOwner] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchBookingsAsVehicleOwner = async () => {
-        try {
-            const data = await getBookingsAsVehicleOwner();
-            // for each booking, fetch user public info & station info
-
-            setBookingsAsVehicleOwner(data);
-        } catch (error) {
-            console.error('Erreur chargement stations', error);
-            throw error;
-        }
-    };
-
-    const fetchBookingsAsStationOwner = async () => {
-        try {
-            const data = await getBookingsAsStationOwner();
-            // for each booking, fetch user public info & vehicle info
-
-            setBookingsAsStationOwner(data);
-        } catch (error) {
-            console.error('Erreur chargement réservations', error);
-            throw error;
-        }
-    };
-
     const loadBookings = async () => {
-        try {
-            setLoading(true);
-            
-            await Promise.all([
-                fetchBookingsAsVehicleOwner(),
-                fetchBookingsAsStationOwner()
-            ]);
-            
-        } catch (error) {
-            setGlobalError('Erreur lors du chargement des réservations');
-            console.error('Erreur lors du chargement des réservations:', error);
-            await checkAuthStatus();
-        } finally {
-            setLoading(false);
-        }
+        setLoading(true);
+        
+        await Promise.all([
+            execute(() => getBookingsAsVehicleOwner(), {
+                onSuccess: (data) => setBookingsAsVehicleOwner(data)
+            }),
+            execute(() => getBookingsAsStationOwner(), {
+                onSuccess: (data) => setBookingsAsStationOwner(data)
+            })
+        ]);
+        
+        setLoading(false);
     };
 
     useEffect(() => {
@@ -68,20 +41,18 @@ function Bookings() {
     };
 
     const handleBookingsExportExcel = async () => {
-        try {
-            const blob = await exportBookingsExcelFormat();
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'mes_reservations.xlsx';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error('Erreur lors de l\'export Excel:', error);
-            setGlobalError('Erreur lors de l\'export des réservations');
-        }
+        await execute(() => exportBookingsExcelFormat(), {
+            onSuccess: (blob) => {
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'mes_reservations.xlsx';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            }
+        });
     };
 
     const [toggleViewState, setToggleViewState] = useState('vehicleOwner');

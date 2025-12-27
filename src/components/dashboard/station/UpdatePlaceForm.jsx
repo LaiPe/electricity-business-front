@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { updatePlace } from '../../../services/StationService';
 import { useListDispatchMethodsContext } from '../../../contexts/ListContext';
+import { useApiCall } from '../../../hooks/useApiCall';
 import Input from '../../form/Input';
 import Button from '../../form/Button';
 
 function UpdatePlaceForm({ place, onClose, onSuccess }) {
+    const { execute, loading } = useApiCall();
     const [formData, setFormData] = useState({
         name: '',
         description: ''
     });
     const [errors, setErrors] = useState({});
-    const [generalError, setGeneralError] = useState('');
-    const [loading, setLoading] = useState(false);
     
     const { updateItem } = useListDispatchMethodsContext();
 
@@ -39,11 +39,6 @@ function UpdatePlaceForm({ place, onClose, onSuccess }) {
                 [name]: ''
             }));
         }
-        
-        // Effacer l'erreur générale
-        if (generalError) {
-            setGeneralError('');
-        }
     };
 
     const validateForm = () => {
@@ -66,37 +61,22 @@ function UpdatePlaceForm({ place, onClose, onSuccess }) {
             return;
         }
         
-        try {
-            setLoading(true);
-            setGeneralError('');
-            
-            const placeData = {
-                name: formData.name.trim(),
-                description: formData.description.trim()
-            };
-            
-            const updatedPlace = await updatePlace(place.id, placeData);
-            
-            // Mettre à jour la place dans la liste locale
-            updateItem(updatedPlace);
-            
-            // Callback de succès
-            if (onSuccess) {
-                onSuccess('Place mise à jour avec succès');
+        const placeData = {
+            name: formData.name.trim(),
+            description: formData.description.trim()
+        };
+        
+        await execute(() => updatePlace(place.id, placeData), {
+            onSuccess: (updatedPlace) => {
+                updateItem(updatedPlace);
+                if (onSuccess) {
+                    onSuccess('Place mise à jour avec succès');
+                }
+                if (onClose) {
+                    onClose();
+                }
             }
-            
-            // Fermer la modale
-            if (onClose) {
-                onClose();
-            }
-            
-        } catch (error) {
-            const errorMessage = error?.message || 'Erreur lors de la mise à jour du lieu';
-            setGeneralError(errorMessage);
-            console.error('Erreur mise à jour lieu:', error);
-        } finally {
-            setLoading(false);
-        }
+        });
     };
 
     const handleClose = () => {
@@ -105,7 +85,6 @@ function UpdatePlaceForm({ place, onClose, onSuccess }) {
             description: ''
         });
         setErrors({});
-        setGeneralError('');
         if (onClose) {
             onClose();
         }
@@ -147,18 +126,6 @@ function UpdatePlaceForm({ place, onClose, onSuccess }) {
                     
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
-                            {generalError && (
-                                <div className="alert alert-danger d-flex align-items-center mb-3" role="alert">
-                                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                                    <div>{generalError}</div>
-                                    <button 
-                                        type="button" 
-                                        className="btn-close ms-auto" 
-                                        onClick={() => setGeneralError('')}
-                                    ></button>
-                                </div>
-                            )}
-
                             <Input
                                 id="name"
                                 name="name"

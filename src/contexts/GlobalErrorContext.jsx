@@ -1,16 +1,22 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useMemo, useCallback } from 'react';
 
 const GlobalErrorContext = createContext(null);
 
 export function GlobalErrorProvider({ children }) {
     const [globalError, setGlobalError] = useState(null);
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         setGlobalError(null);
-    };
+    }, []);
+
+    // Mémoriser la valeur du contexte pour éviter les re-renders inutiles
+    const contextValue = useMemo(() => ({ 
+        globalError, 
+        setGlobalError 
+    }), [globalError]);
 
     return (
-        <GlobalErrorContext.Provider value={{ globalError, setGlobalError }}>
+        <GlobalErrorContext.Provider value={contextValue}>
             {globalError && (
                 <div 
                     style={{

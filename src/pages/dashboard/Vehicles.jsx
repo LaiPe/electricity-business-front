@@ -3,29 +3,19 @@ import { useAuth } from '../../contexts/AuthContext';
 import { getUserVehicles } from '../../services/VehicleService';
 import VehicleList from '../../components/dashboard/vehicle/VehicleList';
 import Spinner from '../../components/spinner/Spinner';
-import { useGlobalErrorContext } from '../../contexts/GlobalErrorContext';
+import { useApiCall } from '../../hooks/useApiCall';
 
 function Vehicles() {
-    const { setGlobalError } = useGlobalErrorContext();
-    const { isAuthenticated, checkAuthStatus } = useAuth();
+    const { execute, loading } = useApiCall();
+    const { isAuthenticated } = useAuth();
 
     const [vehicles, setVehicles] = useState([]);
-    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchVehicles = async () => {
-            setLoading(true);
-
-            try {
-                const data = await getUserVehicles();
-                setVehicles(data);
-            } catch (error) {
-                setGlobalError('Erreur lors du chargement des véhicules');
-                console.error('Erreur chargement véhicules', error);
-                await checkAuthStatus();
-            } finally {
-                setLoading(false);
-            }
+            await execute(() => getUserVehicles(), {
+                onSuccess: (data) => setVehicles(data)
+            });
         };
 
         if (isAuthenticated) {

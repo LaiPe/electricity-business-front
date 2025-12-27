@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { addVehicle } from '../../../services/VehicleService';
 import { useListDispatchMethodsContext } from '../../../contexts/ListContext';
+import { useApiCall } from '../../../hooks/useApiCall';
 import Input from '../../form/Input';
 import Button from '../../form/Button';
 import VehicleModelSearchInput from './VehicleModelSearchInput';
 
 function AddVehicleForm({ onClose }) {
+    const { execute, loading } = useApiCall();
     const [formData, setFormData] = useState({
         modelId: '',
         licensePlate: ''
     });
     const [errors, setErrors] = useState({});
-    const [generalError, setGeneralError] = useState('');
-    const [loading, setLoading] = useState(false);
     const [selectedModel, setSelectedModel] = useState(null);
     
     const { addItem } = useListDispatchMethodsContext();
@@ -81,31 +81,19 @@ function AddVehicleForm({ onClose }) {
             return;
         }
         
-        try {
-            setLoading(true);
-            
-            const vehicleData = {
-                vehicle_model_id: formData.modelId,
-                registration_number: formData.licensePlate.trim()
-            };
-            
-            const newVehicle = await addVehicle(vehicleData);
-            
-            // Ajouter le véhicule à la liste locale
-            addItem(newVehicle);
-            
-            // Fermer la modale
-            if (onClose) {
-                onClose();
+        const vehicleData = {
+            vehicle_model_id: formData.modelId,
+            registration_number: formData.licensePlate.trim()
+        };
+        
+        await execute(() => addVehicle(vehicleData), {
+            onSuccess: (newVehicle) => {
+                addItem(newVehicle);
+                if (onClose) {
+                    onClose();
+                }
             }
-            
-        } catch (error) {
-            const errorMessage = error?.message || 'Erreur lors de l\'ajout du véhicule';
-            setGeneralError(errorMessage);
-            console.error('Erreur ajout véhicule:', error);
-        } finally {
-            setLoading(false);
-        }
+        });
     };
 
     const handleClose = () => {
@@ -114,7 +102,6 @@ function AddVehicleForm({ onClose }) {
             licensePlate: ''
         });
         setErrors({});
-        setGeneralError('');
         setSelectedModel(null);
         if (onClose) {
             onClose();
@@ -140,23 +127,11 @@ function AddVehicleForm({ onClose }) {
                     
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
-                            {generalError && (
-                                <div className="alert alert-danger d-flex align-items-center mb-3" role="alert">
-                                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                                    <div>{generalError}</div>
-                                    <button 
-                                        type="button" 
-                                        className="btn-close ms-auto" 
-                                        onClick={() => setGeneralError('')}
-                                    ></button>
-                                </div>
-                            )}
                             <VehicleModelSearchInput
                                 id="searchQuery"
                                 name="searchQuery"
                                 onSelect={handleModelSelect}
                                 onClearSelection={handleClearModelSelection}
-                                onError={(message) => setGeneralError(message)}
                                 required
                                 disabled={loading}
                                 error={errors.modelId}

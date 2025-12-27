@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useListDispatchMethodsContext } from '../../../contexts/ListContext';
 import { deleteVehicle, updateVehicle } from '../../../services/VehicleService';
+import { useApiCall } from '../../../hooks/useApiCall';
 import UpdateVehicleForm from './UpdateVehicleForm';
 
-function VehicleItem({ vehicle, onError }) {
+function VehicleItem({ vehicle }) {
+    const { execute } = useApiCall();
     const {deleteItem, updateItem} = useListDispatchMethodsContext();
     const [isExpanded, setIsExpanded] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -18,12 +20,9 @@ function VehicleItem({ vehicle, onError }) {
 
     const handleDelete = (vehicle) => {
         if (window.confirm('Êtes-vous sûr de vouloir supprimer ce véhicule ?')) {
-            try {
-                deleteVehicle(vehicle.id);
-                deleteItem(vehicle);
-            } catch (error) {
-                onError('Erreur suppression véhicule.');
-            }
+            execute(() => deleteVehicle(vehicle.id), {
+                onSuccess: () => deleteItem(vehicle)
+            });
         }
     };
 

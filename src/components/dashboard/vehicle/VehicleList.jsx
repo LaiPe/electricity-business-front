@@ -4,17 +4,17 @@ import AddVehicleForm from './AddVehicleForm';
 
 import VehicleItem from './VehicleItem';
 
-function VehicleList({ vehicles, onError }) {
+function VehicleList({ vehicles }) {
     return (
         <div>
             <ListProvider initialItems={vehicles}>
-                <VehicleListContent onError={onError} />
+                <VehicleListContent />
             </ListProvider>
         </div>
     );
 }
 
-function VehicleListContent({ onError }) {
+function VehicleListContent() {
     const vehicles = useListContext();
     const [openedAddForm, setOpenedAddForm] = useState(false);
 
@@ -38,7 +38,7 @@ function VehicleListContent({ onError }) {
             ) : (
                 <div className="list-group">
                     {vehicles.map((vehicle) => (
-                        <VehicleItem key={vehicle.id} vehicle={vehicle} onError={onError} />
+                        <VehicleItem key={vehicle.id} vehicle={vehicle} />
                     ))}
                 </div>
             )}
