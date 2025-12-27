@@ -1,5 +1,8 @@
 import { useState } from "react";
 import ActionBookingTable from "./ActionBookingTable";
+import BookingTable from "./BookingTable";
+import CancellableBookingTable from "./CancellableBookingTable";
+import SimpleBookingTable from "./SimpleBookingTable";
 import { BookingsProvider, useBookingsContext } from "../../../contexts/BookingsContext";
 
 
@@ -133,6 +136,16 @@ function AsStationOwnerBookingList({ onError }) {
                     </li>
                     <li className="nav-item">
                         <a 
+                            className={`nav-link ${activeTab === "cancelled" ? "active" : ""}`} 
+                            aria-current={activeTab === "cancelled" ? "true" : "false"}
+                            href="#" 
+                            onClick={() => setActiveTab("cancelled")}
+                        >
+                            Annulées
+                        </a>
+                    </li>
+                    <li className="nav-item">
+                        <a 
                             className={`nav-link ${activeTab === "past" ? "active" : ""}`} 
                             aria-current={activeTab === "past" ? "true" : "false"}
                             href="#" 
@@ -151,17 +164,22 @@ function AsStationOwnerBookingList({ onError }) {
                 )}
                 {activeTab === 'accepted' && (
                     <div>
-                        <h3>Acceptées</h3>
+                        <CancellableBookingTable bookings={bookings?.accepted} onError={onError} />
                     </div>
                 )}
                 {activeTab === 'rejected' && (
                     <div>
-                        <h3>Refusées</h3>
+                        <SimpleBookingTable bookings={bookings?.rejected} />
+                    </div>
+                )}
+                {activeTab === 'cancelled' && (
+                    <div>
+                        <SimpleBookingTable bookings={bookings?.cancelled} />
                     </div>
                 )}
                 {activeTab === 'past' && (
                     <div>
-                        <h3>Passées</h3>
+                        <BookingTable bookings={bookings?.past} onError={onError} />
                     </div>
                 )}
                 

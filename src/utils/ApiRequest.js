@@ -28,6 +28,11 @@ export const apiRequest = async (endpoint, method = 'GET', body = null) => {
             return await response.json();
         }
         
+        // Gérer les fichiers binaires (PDF, images, etc.)
+        if (contentType && (contentType.includes('application/pdf') || contentType.includes('application/octet-stream'))) {
+            return await response.blob();
+        }
+        
         return null;
     } catch (error) {
         throw error;

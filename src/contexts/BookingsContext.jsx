@@ -14,6 +14,13 @@ function StationOwnerBookingsReducer(state, action) {
                 pending: state.pending.filter(booking => booking.id !== action.payload.id),
                 rejected: [...state.rejected, { ...action.payload, state: 'REJECTED' }]
             };
+        case 'CANCEL_BOOKING':
+            return {
+                ...state,
+                pending: state.pending.filter(booking => booking.id !== action.payload.id),
+                accepted: state.accepted.filter(booking => booking.id !== action.payload.id),
+                cancelled: [...state.cancelled, { ...action.payload, state: 'CANCELLED' }]
+            };
         default:
             return state;
     }
@@ -62,7 +69,7 @@ export function BookingsProvider({ initialBookings, asVehicleOwner, asStationOwn
             // Initialiser toutes les catégories avec des tableaux vides
             const initialState = asVehicleOwner 
                 ? { upcoming: [], past: [], cancelled: [] }
-                : { pending: [], accepted: [], rejected: [], past: [] };
+                : { pending: [], accepted: [], rejected: [], cancelled: [], past: [] };
             
             safeInitialItems.forEach((booking) => {
                 console.log('Processing booking:', booking);
@@ -83,6 +90,8 @@ export function BookingsProvider({ initialBookings, asVehicleOwner, asStationOwn
                         category = 'accepted';
                     } else if (booking.state === 'REJECTED') {
                         category = 'rejected';
+                    } else if (booking.state === 'CANCELLED') {
+                        category = 'cancelled';
                     } else if (booking.state === 'COMPLETED') {
                         category = 'past';
                     }
@@ -110,7 +119,8 @@ export function BookingsProvider({ initialBookings, asVehicleOwner, asStationOwn
         } else if (asStationOwner) {
             return {
                 acceptBooking: (booking) => dispatch({ type: 'ACCEPT_BOOKING', payload: booking }),
-                rejectBooking: (booking) => dispatch({ type: 'REJECT_BOOKING', payload: booking })
+                rejectBooking: (booking) => dispatch({ type: 'REJECT_BOOKING', payload: booking }),
+                cancelBooking: (booking) => dispatch({ type: 'CANCEL_BOOKING', payload: booking })
             };
         }
         return {};

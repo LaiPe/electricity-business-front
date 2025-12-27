@@ -1,16 +1,26 @@
 import { useBookingsDispatchMethodsContext } from '../../../contexts/BookingsContext';
+import { acceptBooking as acceptBookingAPI, rejectBooking as rejectBookingAPI } from '../../../services/BookingService';
 
 function ActionBookingTable({ bookings, onError }) {
     const { acceptBooking, rejectBooking } = useBookingsDispatchMethodsContext();
     const onAccept = async (booking) => {
         try {
+            await acceptBookingAPI(booking.id);
             acceptBooking(booking);
         } catch (error) {
             console.error('Erreur lors de l\'acceptation de la réservation:', error);
             onError('Erreur lors de l\'acceptation de la réservation');
         }
     }
-    const onReject = async (bookingId) => {}
+    const onReject = async (booking) => {
+        try {
+            await rejectBookingAPI(booking.id);
+            rejectBooking(booking);
+        } catch (error) {
+            console.error('Erreur lors du refus de la réservation:', error);
+            onError('Erreur lors du refus de la réservation');
+        }
+    }
     
     const formatDateTime = (dateString) => {
         if (!dateString) return 'Non définie';
@@ -36,7 +46,7 @@ function ActionBookingTable({ bookings, onError }) {
                     </button>
                     <button 
                         className="btn btn-danger btn-sm"
-                        onClick={() => onReject && onReject(booking.id)}
+                        onClick={() => onReject(booking)}
                         title="Refuser la réservation"
                     >
                         <i className="bi bi-x-lg"></i>
