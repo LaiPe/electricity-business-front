@@ -8,6 +8,15 @@ import {
 } from '../../../services/BookingService';
 import StationLocationModal from './StationLocationModal';
 
+const STATUS_LABELS = {
+    PENDING_ACCEPT: { label: 'En attente', className: 'bg-warning text-dark' },
+    ACCEPTED: { label: 'Acceptée', className: 'bg-success' },
+    REJECTED: { label: 'Refusée', className: 'bg-danger' },
+    CANCELLED: { label: 'Annulée', className: 'bg-secondary' },
+    IN_PROGRESS: { label: 'En cours', className: 'bg-info' },
+    COMPLETED: { label: 'Terminée', className: 'bg-primary' },
+};
+
 /**
  * Composant unifié pour afficher les tableaux de réservations
  * 
@@ -18,14 +27,18 @@ import StationLocationModal from './StationLocationModal';
  * @param {boolean} props.showCancel - Afficher le bouton annuler
  * @param {boolean} props.showPdfDownload - Afficher le bouton de téléchargement PDF
  * @param {boolean} props.showLocateStation - Afficher le bouton de localisation de la borne
+ * @param {boolean} props.showStatus - Afficher le statut de la réservation
+ * @param {boolean} props.isVehicleOwnerView - Vue propriétaire de véhicule (ordre des colonnes différent)
  */
-function StationOwnerBookingTable({ 
+function GenericBookingTable({ 
     bookings, 
     onError,
     showAcceptReject = false,
     showCancel = false,
     showPdfDownload = false,
-    showLocateStation = false
+    showLocateStation = false,
+    showStatus = false,
+    isVehicleOwnerView = false
 }) {
     const [selectedStation, setSelectedStation] = useState(null);
     
@@ -132,56 +145,117 @@ function StationOwnerBookingTable({
             <table className="table table-striped table-hover align-middle">
                 <thead className="table-light">
                     <tr>
-                        <th scope="col">Borne</th>
-                        <th scope="col">Date et heure début</th>
-                        <th scope="col">Date et heure fin</th>
-                        <th scope="col">Propriétaire du véhicule</th>
-                        <th scope="col">Modèle du véhicule</th>
-                        <th scope="col">Immatriculation</th>
-                        {showPdfDownload && <th scope="col">Confirmation</th>}
-                        {hasActions && <th scope="col">Actions</th>}
+                        {isVehicleOwnerView ? (
+                            <>
+                                <th scope="col">Modèle du véhicule</th>
+                                <th scope="col">Immatriculation</th>
+                                <th scope="col">Date et heure début</th>
+                                <th scope="col">Date et heure fin</th>
+                                <th scope="col">Propriétaire de la borne</th>
+                                <th scope="col">Borne</th>
+                                {showStatus && <th scope="col">Statut</th>}
+                                {showPdfDownload && <th scope="col">Confirmation</th>}
+                                {hasActions && <th scope="col">Actions</th>}
+                            </>
+                        ) : (
+                            <>
+                                <th scope="col">Borne</th>
+                                <th scope="col">Date et heure début</th>
+                                <th scope="col">Date et heure fin</th>
+                                <th scope="col">Propriétaire du véhicule</th>
+                                <th scope="col">Modèle du véhicule</th>
+                                <th scope="col">Immatriculation</th>
+                                {showStatus && <th scope="col">Statut</th>}
+                                {showPdfDownload && <th scope="col">Confirmation</th>}
+                                {hasActions && <th scope="col">Actions</th>}
+                            </>
+                        )}
                     </tr>
                 </thead>
                 <tbody>
-                    {bookings.map((booking) => (
+                    {bookings.map((booking) => {
+                        const status = STATUS_LABELS[booking.state] || { label: booking.state, className: 'bg-secondary' };
+                        
+                        return (
                         <tr key={booking.id}>
-                            <td>
-                                <div className="d-flex align-items-center justify-content-center gap-2">
-                                    <span>
-                                        {booking.station?.place?.name 
-                                            ? `${booking.station.place.name} - ${booking.station?.name}`
-                                            : booking.station?.name}
+                            {isVehicleOwnerView ? (
+                                <>
+                                    <td>
+                                        {booking.vehicle?.vehicle_model?.make} {booking.vehicle?.vehicle_model?.model}
+                                    </td>
+                                    <td>
+                                        <code className="text-primary">{booking.vehicle?.registration_number}</code>
+                                    </td>
+                                    <td>{formatDateTime(booking.start_date)}</td>
+                                    <td>{formatDateTime(booking.expected_end_date)}</td>
+                                    <td>
+                                        {booking.station?.owner?.first_name} {booking.station?.owner?.last_name}
+                                    </td>
+                                    <td>
+                                        <div className="d-flex align-items-center justify-content-center gap-3">
+                                            <span>{booking.station?.name}</span>
+                                            {showLocateStation && booking.station && (
+                                                <button 
+                                                    type="button"
+                                                    className="btn btn-outline-primary btn-sm"
+                                                    onClick={() => handleLocateStation(booking.station)}
+                                                    title="Localiser la borne"
+                                                >
+                                                    <i className="bi bi-map me-1"></i>
+                                                    Localiser
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </>
+                            ) : (
+                                <>
+                                    <td>
+                                        <div className="d-flex align-items-center justify-content-center gap-2">
+                                            <span>
+                                                {booking.station?.place?.name 
+                                                    ? `${booking.station.place.name} - ${booking.station?.name}`
+                                                    : booking.station?.name}
+                                            </span>
+                                            {showLocateStation && booking.station && (
+                                                <button 
+                                                    type="button"
+                                                    className="btn btn-primary btn-sm"
+                                                    onClick={() => handleLocateStation(booking.station)}
+                                                    title="Localiser la borne"
+                                                >
+                                                    <i className="bi bi-map me-1"></i>
+                                                    Localiser
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td>{formatDateTime(booking.start_date)}</td>
+                                    <td>{formatDateTime(booking.expected_end_date)}</td>
+                                    <td>
+                                        {booking.vehicle?.owner?.first_name && booking.vehicle?.owner?.last_name 
+                                            ? `${booking.vehicle.owner.first_name} ${booking.vehicle.owner.last_name}`
+                                            : 'Non disponible'}
+                                    </td>
+                                    <td>
+                                        {booking.vehicle?.vehicle_model 
+                                            ? `${booking.vehicle.vehicle_model.make} ${booking.vehicle.vehicle_model.model} ${booking.vehicle.vehicle_model.year || ''}`
+                                            : 'Non disponible'}
+                                    </td>
+                                    <td>
+                                        <code className="text-primary">
+                                            {booking.vehicle?.registration_number || 'Non disponible'}
+                                        </code>
+                                    </td>
+                                </>
+                            )}
+                            {showStatus && (
+                                <td>
+                                    <span className={`badge ${status.className}`}>
+                                        {status.label}
                                     </span>
-                                    {showLocateStation && booking.station && (
-                                        <button 
-                                            type="button"
-                                            className="btn btn-primary btn-sm"
-                                            onClick={() => handleLocateStation(booking.station)}
-                                            title="Localiser la borne"
-                                        >
-                                            <i className="bi bi-map me-1"></i>
-                                            Localiser
-                                        </button>
-                                    )}
-                                </div>
-                            </td>
-                            <td>{formatDateTime(booking.start_date)}</td>
-                            <td>{formatDateTime(booking.expected_end_date)}</td>
-                            <td>
-                                {booking.vehicle?.owner?.first_name && booking.vehicle?.owner?.last_name 
-                                    ? `${booking.vehicle.owner.first_name} ${booking.vehicle.owner.last_name}`
-                                    : 'Non disponible'}
-                            </td>
-                            <td>
-                                {booking.vehicle?.vehicle_model 
-                                    ? `${booking.vehicle.vehicle_model.make} ${booking.vehicle.vehicle_model.model} ${booking.vehicle.vehicle_model.year || ''}`
-                                    : 'Non disponible'}
-                            </td>
-                            <td>
-                                <code className="text-primary">
-                                    {booking.vehicle?.registration_number || 'Non disponible'}
-                                </code>
-                            </td>
+                                </td>
+                            )}
                             {showPdfDownload && (
                                 <td>
                                     <button 
@@ -227,7 +301,8 @@ function StationOwnerBookingTable({
                                 </td>
                             )}
                         </tr>
-                    ))}
+                        );
+                    })}
                 </tbody>
             </table>
 
@@ -241,4 +316,4 @@ function StationOwnerBookingTable({
     );
 }
 
-export default StationOwnerBookingTable;
+export default GenericBookingTable;
