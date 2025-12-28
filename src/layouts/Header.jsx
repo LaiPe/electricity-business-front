@@ -35,7 +35,7 @@ function Header() {
                             // Navigation pour utilisateur connecté
                             <>
                                 <li className='nav-item dropdown'>
-                                    <NavLink to="/" className="nav-link" onClick={toggleNav}>Accueil</NavLink>
+                                    <NavLink to="/search" className="nav-link" onClick={toggleNav}>Rechercher</NavLink>
                                 </li>
                                 <li className='nav-item dropdown'>
                                     <NavLink to="/dashboard" className="nav-link" onClick={toggleNav}>Tableau de bord</NavLink>

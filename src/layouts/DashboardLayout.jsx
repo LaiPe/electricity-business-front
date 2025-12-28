@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import useViewport from '../hooks/useViewport';
 
 function DashboardLayout({ children }) {
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -8,18 +9,7 @@ function DashboardLayout({ children }) {
         setIsCollapsed(!isCollapsed);
     };
 
-    // Détecter si on est sur mobile
-    const [isMobile, setIsMobile] = useState(false);
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth <= 991);
-        };
-        
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
+    const { isMobile } = useViewport({ mobile: 991 });
 
     let sidebarClass;
     let sidebarStyle = {};

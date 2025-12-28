@@ -6,7 +6,8 @@ export const PUBLIC_ROUTES = [
     '/login',
     '/register',
     '/privacy-policy',
-    '/terms-of-service'
+    '/terms-of-service',
+    '/search'
 ];
 
 // Routes accessibles aux utilisateurs authentifiés mais non vérifiés

@@ -1,6 +1,7 @@
 import {Map, Marker} from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import useViewport from '../../../hooks/useViewport';
 import { useNavigate } from 'react-router-dom';
 import Spinner from '../../spinner/Spinner';
 import HeroSearchForm from './HeroSearchForm';
@@ -35,18 +36,7 @@ function HeroMap() {
     const [clusters, setClusters] = useState([]);
     const [individualStations, setIndividualStations] = useState([]);
     
-    // Détecter si on est sur mobile
-    const [isMobile, setIsMobile] = useState(false);
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth <= 768);
-        };
-        
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
+    const { isMobile } = useViewport();
 
     // Fonction pour merger les résultats de recherche sans doublons
     const mergeSearchResults = (prevResults, newStations) => {

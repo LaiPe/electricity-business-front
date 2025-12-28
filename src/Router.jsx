@@ -24,6 +24,7 @@ import { GlobalErrorProvider } from './contexts/GlobalErrorContext.jsx';
 import RouteGuard from './RouteGuard.jsx';
 
 import Spinner from './components/spinner/Spinner.jsx';
+import Search from './pages/Search.jsx';
 
 
 const router = createBrowserRouter([
@@ -67,6 +68,10 @@ const router = createBrowserRouter([
       {
         path: '/unauthorized',
         element: <UnauthorizedPage />
+      },
+      {
+        path: '/search',
+        element: <Search />
       },
       {
         path: '/dashboard',

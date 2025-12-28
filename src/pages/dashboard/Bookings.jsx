@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react';
+import useViewport from '../../hooks/useViewport';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Spinner from '../../components/spinner/Spinner';
@@ -26,18 +27,7 @@ function Bookings() {
     const [initialDateFilter, setInitialDateFilter] = useState(initialFilterDate);
     const [initialActiveTab, setInitialActiveTab] = useState(initialTab);
 
-    // Détecter si on est sur mobile
-    const [isMobile, setIsMobile] = useState(false);
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth <= 991);
-        };
-        
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
+    const { isMobile } = useViewport({ mobile: 991 });
 
     const loadBookings = async () => {
         setLoading(true);

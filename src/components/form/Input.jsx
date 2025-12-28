@@ -13,18 +13,38 @@ function Input({
     placeholder,
     className = '',
     helpText,
+    wrapperClassName = 'mb-3',
+    options = [], // Pour les select
     ...props
 }) {
-    const inputClasses = `form-control ${error ? 'is-invalid' : ''} ${className}`.trim();
+    const inputClasses = `${type === 'select' ? 'form-select' : 'form-control'} ${error ? 'is-invalid' : ''} ${className}`.trim();
 
-    return (
-        <div className="mb-3">
-            {label && (
-                <label htmlFor={id} className="form-label">
-                    {label}
-                    {required && <span className="text-danger ms-1">*</span>}
-                </label>
-            )}
+    const renderInput = () => {
+        if (type === 'select') {
+            return (
+                <select
+                    id={id}
+                    name={name}
+                    className={inputClasses}
+                    value={value}
+                    onChange={onChange}
+                    required={required}
+                    disabled={disabled}
+                    {...props}
+                >
+                    <option value="" disabled>
+                        {placeholder || 'Sélectionnez une option'}
+                    </option>
+                    {options.map((option) => (
+                        <option key={option.value} value={option.value}>
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
+            );
+        }
+
+        return (
             <input
                 type={type}
                 id={id}
@@ -37,6 +57,18 @@ function Input({
                 disabled={disabled}
                 {...props}
             />
+        );
+    };
+
+    return (
+        <div className={wrapperClassName}>
+            {label && (
+                <label htmlFor={id} className="form-label">
+                    {label}
+                    {required && <span className="text-danger ms-1">*</span>}
+                </label>
+            )}
+            {renderInput()}
             {helpText && (
                 <div className="form-text text-muted">
                     <i className="bi bi-info-circle me-1"></i>
@@ -64,6 +96,12 @@ Input.propTypes = {
     disabled: PropTypes.bool,
     placeholder: PropTypes.string,
     className: PropTypes.string,
+    options: PropTypes.arrayOf(
+        PropTypes.shape({
+            value: PropTypes.string.isRequired,
+            label: PropTypes.string.isRequired,
+        })
+    ),
 };
 
 export default Input;

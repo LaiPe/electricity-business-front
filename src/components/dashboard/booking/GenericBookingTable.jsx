@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import useViewport from '../../../hooks/useViewport';
 import { useBookingsDispatchMethodsContext } from '../../../contexts/BookingsContext';
 import { 
     acceptBooking as acceptBookingAPI, 
@@ -43,17 +44,7 @@ function GenericBookingTable({
     const [selectedStation, setSelectedStation] = useState(null);
 
     // Détecter si on est sur mobile
-        const [isMobile, setIsMobile] = useState(false);
-        useEffect(() => {
-            const checkMobile = () => {
-                setIsMobile(window.innerWidth <= 991);
-            };
-            
-            checkMobile();
-            window.addEventListener('resize', checkMobile);
-            
-            return () => window.removeEventListener('resize', checkMobile);
-        }, []);
+        const { isMobile } = useViewport({ mobile: 991 });
     
     // Utiliser le contexte seulement si on a besoin des actions
     let dispatchMethods = {};
