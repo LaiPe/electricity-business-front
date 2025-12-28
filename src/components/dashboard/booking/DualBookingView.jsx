@@ -5,7 +5,7 @@ import DateRangeFilter from "./DateRangeFilter";
 
 
 
-export default function DualBookingView( { bookings, asVehicleOwner, asStationOwner } ) {
+export default function DualBookingView( { bookings, asVehicleOwner, asStationOwner, initialDateFilter = '', initialTab = '' } ) {
     if (!asVehicleOwner && !asStationOwner) {
         throw new Error('DualBookingView requires either asVehicleOwner or asStationOwner to be true.');
     }
@@ -24,6 +24,8 @@ export default function DualBookingView( { bookings, asVehicleOwner, asStationOw
             <UnifiedBookingList 
                 asVehicleOwner={asVehicleOwner} 
                 asStationOwner={asStationOwner}
+                initialDateFilter={initialDateFilter}
+                initialTab={initialTab}
             />
         </BookingsProvider>
     );
@@ -31,17 +33,8 @@ export default function DualBookingView( { bookings, asVehicleOwner, asStationOw
 }
 
 
-function UnifiedBookingList({ asVehicleOwner, asStationOwner }) {
+function UnifiedBookingList({ asVehicleOwner, asStationOwner, initialDateFilter = '', initialTab = '' }) {
     const bookings = useBookingsContext();
-    const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
-    
-    // Réinitialiser le filtre quand le type de vue change
-    useEffect(() => {
-        setDateFilter({ startDate: '', endDate: '' });
-    }, [asVehicleOwner, asStationOwner]);
-    
-    // Check if filter is active
-    const isFilterActive = dateFilter.startDate || dateFilter.endDate;
     
     // Tabs configuration based on the view type
     const tabs = asVehicleOwner 
@@ -58,7 +51,38 @@ function UnifiedBookingList({ asVehicleOwner, asStationOwner }) {
             { key: 'past', label: 'Passées' }
           ];
     
-    const [activeTab, setActiveTab] = useState(tabs[0].key);
+    // Déterminer l'onglet initial (vérifier qu'il existe dans les tabs)
+    const getValidInitialTab = () => {
+        if (initialTab && tabs.some(t => t.key === initialTab)) {
+            return initialTab;
+        }
+        return tabs[0].key;
+    };
+    
+    const [activeTab, setActiveTab] = useState(getValidInitialTab());
+    const [dateFilter, setDateFilter] = useState({ 
+        startDate: initialDateFilter, 
+        endDate: initialDateFilter 
+    });
+    
+    // Réinitialiser le filtre et l'onglet quand le type de vue change ou quand les props changent
+    useEffect(() => {
+        if (initialDateFilter) {
+            setDateFilter({ startDate: initialDateFilter, endDate: initialDateFilter });
+        } else {
+            setDateFilter({ startDate: '', endDate: '' });
+        }
+        
+        // Mettre à jour l'onglet actif si initialTab change
+        if (initialTab && tabs.some(t => t.key === initialTab)) {
+            setActiveTab(initialTab);
+        } else {
+            setActiveTab(tabs[0].key);
+        }
+    }, [asVehicleOwner, asStationOwner, initialDateFilter, initialTab]);
+    
+    // Check if filter is active
+    const isFilterActive = dateFilter.startDate || dateFilter.endDate;
 
     console.log("UnifiedBookingList bookings:", bookings);
 

@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Spinner from '../../components/spinner/Spinner';
 import {getBookingsAsVehicleOwner, getBookingsAsStationOwner, exportBookingsExcelFormat} from '../../services/BookingService';
@@ -10,10 +11,20 @@ import { useApiCall } from '../../hooks/useApiCall';
 function Bookings() {
     const { execute } = useApiCall();
     const { isAuthenticated } = useAuth();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const [bookingsAsVehicleOwner, setBookingsAsVehicleOwner] = useState([]);
     const [bookingsAsStationOwner, setBookingsAsStationOwner] = useState([]);
     const [loading, setLoading] = useState(true);
+    
+    // Lire les paramètres d'URL pour le filtre initial
+    const initialView = searchParams.get('view') || 'vehicleOwner';
+    const initialFilterDate = searchParams.get('filterDate') || '';
+    const initialTab = searchParams.get('tab') || '';
+    
+    const [toggleViewState, setToggleViewState] = useState(initialView);
+    const [initialDateFilter, setInitialDateFilter] = useState(initialFilterDate);
+    const [initialActiveTab, setInitialActiveTab] = useState(initialTab);
 
     // Détecter si on est sur mobile
     const [isMobile, setIsMobile] = useState(false);
@@ -48,6 +59,15 @@ function Bookings() {
             loadBookings();
         }
     }, [isAuthenticated]);
+    
+    // Nettoyer les paramètres d'URL après le chargement initial
+    useEffect(() => {
+        if (searchParams.has('view') || searchParams.has('filterDate') || searchParams.has('tab')) {
+            // Supprimer les paramètres de l'URL après les avoir lus
+            const newParams = new URLSearchParams();
+            setSearchParams(newParams, { replace: true });
+        }
+    }, []);
 
     const handleRefreshBookings = () => {
         loadBookings();
@@ -67,11 +87,11 @@ function Bookings() {
             }
         });
     };
-
-    const [toggleViewState, setToggleViewState] = useState('vehicleOwner');
     
     const handleToggleView = (newValue) => {
         setToggleViewState(newValue);
+        setInitialDateFilter(''); // Reset le filtre lors du changement de vue
+        setInitialActiveTab(''); // Reset l'onglet lors du changement de vue
     }
         
 
@@ -134,9 +154,19 @@ function Bookings() {
                 </div>
             ) : ( 
                 toggleViewState === 'vehicleOwner' ? (
-                    <DualBookingView bookings={bookingsAsVehicleOwner} asVehicleOwner /> 
+                    <DualBookingView 
+                        bookings={bookingsAsVehicleOwner} 
+                        asVehicleOwner 
+                        initialDateFilter={initialDateFilter}
+                        initialTab={initialActiveTab}
+                    /> 
                 ) : (
-                    <DualBookingView bookings={bookingsAsStationOwner} asStationOwner />
+                    <DualBookingView 
+                        bookings={bookingsAsStationOwner} 
+                        asStationOwner 
+                        initialDateFilter={initialDateFilter}
+                        initialTab={initialActiveTab}
+                    />
                 )
             )}
         </div>

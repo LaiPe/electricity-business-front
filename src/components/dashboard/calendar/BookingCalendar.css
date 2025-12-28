@@ -1,0 +1,148 @@
+.booking-calendar {
+    background: var(--bs-body-bg);
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.calendar-grid {
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 4px;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--bs-secondary);
+    padding: 0.5rem 0;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    flex-grow: 1;
+}
+
+.calendar-day {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0.5rem;
+    min-height: 50px;
+    background: var(--bs-light);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.calendar-day:hover {
+    background: var(--bs-gray-300);
+}
+
+.calendar-day.other-month {
+    opacity: 0.4;
+}
+
+.calendar-day.today {
+    background: var(--bs-primary);
+    color: white;
+}
+
+.calendar-day.today:hover {
+    background: var(--bs-primary);
+    opacity: 0.9;
+}
+
+.calendar-day.has-bookings {
+    cursor: pointer;
+}
+
+.day-number {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.booking-indicator {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    background: var(--bs-danger);
+    border-radius: 50%;
+}
+
+.calendar-day.today .booking-indicator {
+    background: white;
+    box-shadow: 0 0 0 1px var(--bs-danger);
+}
+
+/* Popup overlay */
+.calendar-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+
+.calendar-popup {
+    background: var(--bs-body-bg);
+    border-radius: 8px;
+    padding: 1rem;
+    max-width: 400px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.popup-header h6 {
+    text-transform: capitalize;
+}
+
+.popup-content {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.booking-card {
+    border: 1px solid var(--bs-border-color);
+}
+
+.booking-card:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .calendar-day {
+        min-height: 40px;
+        padding: 0.25rem;
+    }
+    
+    .day-number {
+        font-size: 0.8rem;
+    }
+    
+    .booking-indicator {
+        width: 6px;
+        height: 6px;
+        top: 2px;
+        right: 2px;
+    }
+}
