@@ -25,7 +25,8 @@ export function GlobalErrorProvider({ children }) {
                         right: '20px',
                         zIndex: 9999,
                         maxWidth: '500px',
-                        minWidth: '300px'
+                        minWidth: '300px',
+                        marginLeft: '20px'
                     }}
                 >
                     <div className="alert alert-danger d-flex align-items-center shadow" role="alert">

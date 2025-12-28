@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useBookingsDispatchMethodsContext } from '../../../contexts/BookingsContext';
 import { 
     acceptBooking as acceptBookingAPI, 
@@ -41,6 +41,19 @@ function GenericBookingTable({
 }) {
     const { execute } = useApiCall();
     const [selectedStation, setSelectedStation] = useState(null);
+
+    // Détecter si on est sur mobile
+        const [isMobile, setIsMobile] = useState(false);
+        useEffect(() => {
+            const checkMobile = () => {
+                setIsMobile(window.innerWidth <= 991);
+            };
+            
+            checkMobile();
+            window.addEventListener('resize', checkMobile);
+            
+            return () => window.removeEventListener('resize', checkMobile);
+        }, []);
     
     // Utiliser le contexte seulement si on a besoin des actions
     let dispatchMethods = {};
@@ -146,6 +159,182 @@ function GenericBookingTable({
         );
     }
 
+    // Rendu des boutons d'action (partagé entre mobile et desktop)
+    const renderActionButtons = (booking) => (
+        <div className={`d-flex ${isMobile ? 'flex-row flex-wrap' : 'flex-column'} align-items-center gap-2`}>
+            {showPdfDownload && (
+                (booking.state === 'ACCEPTED' || booking.state === 'ONGOING' || booking.state === 'COMPLETED') ? (
+                    <button 
+                        className={`btn btn-primary btn-sm ${isMobile ? '' : 'w-100'}`}
+                        onClick={() => handleDownloadPDF(booking)}
+                        title="Télécharger le PDF de confirmation"
+                    >
+                        <i className={`bi bi-file-earmark-pdf ${isMobile ? '' : 'me-2'}`}></i>
+                        {!isMobile && 'Télécharger PDF'}
+                    </button>
+                ) : (
+                    <button 
+                        className={`btn btn-secondary btn-sm ${isMobile ? '' : 'w-100'}`}
+                        disabled
+                        title="Disponible après acceptation de la réservation"
+                    >
+                        <i className={`bi bi-file-earmark-pdf ${isMobile ? '' : 'me-2'}`}></i>
+                        {!isMobile && 'Télécharger PDF'}
+                    </button>
+                )
+            )}
+            {showAcceptReject && booking.state === 'PENDING_ACCEPT' && (
+                <>
+                    <button 
+                        className={`btn btn-success btn-sm ${isMobile ? '' : 'w-100'}`}
+                        onClick={() => handleAccept(booking)}
+                        title="Accepter la réservation"
+                    >
+                        <i className={`bi bi-check-lg ${isMobile ? '' : 'me-2'}`}></i>
+                        {!isMobile && 'Accepter'}
+                    </button>
+                    <button 
+                        className={`btn btn-danger btn-sm ${isMobile ? '' : 'w-100'}`}
+                        onClick={() => handleReject(booking)}
+                        title="Refuser la réservation"
+                    >
+                        <i className={`bi bi-x-lg ${isMobile ? '' : 'me-2'}`}></i>
+                        {!isMobile && 'Refuser'}
+                    </button>
+                </>
+            )}
+            {showCancel && (
+                <button 
+                    className={`btn btn-danger btn-sm ${isMobile ? '' : 'w-100'}`}
+                    onClick={() => handleCancel(booking)}
+                    title="Annuler la réservation"
+                >
+                    <i className={`bi bi-x-circle ${isMobile ? '' : 'me-2'}`}></i>
+                    {!isMobile && 'Annuler'}
+                </button>
+            )}
+        </div>
+    );
+
+    // Vue mobile : liste de cards
+    if (isMobile) {
+        return (
+            <div className="d-flex flex-column gap-3">
+                {bookings.map((booking) => {
+                    const status = STATUS_LABELS[booking.state] || { label: booking.state, className: 'bg-secondary' };
+                    
+                    return (
+                        <div key={booking.id} className="card">
+                            <div className="card-body">
+                                {/* Header avec statut */}
+                                <div className="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h6 className="card-title mb-1">
+                                            {isVehicleOwnerView ? (
+                                                <>
+                                                    {booking.vehicle?.vehicle_model?.make} {booking.vehicle?.vehicle_model?.model}
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {booking.station?.place?.name 
+                                                        ? `${booking.station.place.name} - ${booking.station?.name}`
+                                                        : booking.station?.name}
+                                                </>
+                                            )}
+                                        </h6>
+                                        <small className="text-muted">
+                                            <code className="text-primary">
+                                                {isVehicleOwnerView 
+                                                    ? booking.vehicle?.registration_number
+                                                    : booking.vehicle?.registration_number || 'Non disponible'}
+                                            </code>
+                                        </small>
+                                    </div>
+                                    {showStatus && (
+                                        <span className={`badge ${status.className}`}>
+                                            {status.label}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Informations */}
+                                <div className="row g-2 mb-3">
+                                    <div className="col-6">
+                                        <small className="text-muted d-block">Date</small>
+                                        <span className="fw-medium">{formatDateTime(booking.start_date)}</span>
+                                    </div>
+                                    <div className="col-6">
+                                        <small className="text-muted d-block">Durée</small>
+                                        <span className="fw-medium">
+                                            <i className="bi bi-clock me-1"></i>
+                                            {calculateDuration(booking.start_date, booking.expected_end_date)}
+                                        </span>
+                                    </div>
+                                    {isVehicleOwnerView ? (
+                                        <>
+                                            <div className="col-6">
+                                                <small className="text-muted d-block">Propriétaire borne</small>
+                                                <span className="fw-medium">
+                                                    {booking.station?.owner?.first_name} {booking.station?.owner?.last_name}
+                                                </span>
+                                            </div>
+                                            <div className="col-6">
+                                                <small className="text-muted d-block">Borne</small>
+                                                <span className="fw-medium">{booking.station?.name}</span>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="col-6">
+                                                <small className="text-muted d-block">Propriétaire véhicule</small>
+                                                <span className="fw-medium">
+                                                    {booking.vehicle?.owner?.first_name && booking.vehicle?.owner?.last_name 
+                                                        ? `${booking.vehicle.owner.first_name} ${booking.vehicle.owner.last_name}`
+                                                        : 'Non disponible'}
+                                                </span>
+                                            </div>
+                                            <div className="col-6">
+                                                <small className="text-muted d-block">Véhicule</small>
+                                                <span className="fw-medium">
+                                                    {booking.vehicle?.vehicle_model 
+                                                        ? `${booking.vehicle.vehicle_model.make} ${booking.vehicle.vehicle_model.model}`
+                                                        : 'Non disponible'}
+                                                </span>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Actions */}
+                                <div className="d-flex flex-wrap gap-2 align-items-center">
+                                    {showLocateStation && booking.station && (
+                                        <button 
+                                            type="button"
+                                            className="btn btn-outline-primary btn-sm"
+                                            onClick={() => handleLocateStation(booking.station)}
+                                            title="Localiser la borne"
+                                        >
+                                            <i className="bi bi-map"></i>
+                                        </button>
+                                    )}
+                                    {hasAnyActionColumn && renderActionButtons(booking)}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
+
+                {selectedStation && (
+                    <StationLocationModal 
+                        station={selectedStation} 
+                        onClose={handleCloseModal} 
+                    />
+                )}
+            </div>
+        );
+    }
+
+    // Vue desktop : tableau
     return (
         <div className="table-responsive">
             <table className="table table-striped table-hover align-middle">
@@ -270,59 +459,7 @@ function GenericBookingTable({
                             )}
                             {hasAnyActionColumn && (
                                 <td>
-                                    <div className="d-flex flex-column align-items-center gap-2">
-                                        {showPdfDownload && (
-                                            (booking.state === 'ACCEPTED' || booking.state === 'ONGOING' || booking.state === 'COMPLETED') ? (
-                                                <button 
-                                                    className="btn btn-primary btn-sm w-100"
-                                                    onClick={() => handleDownloadPDF(booking)}
-                                                    title="Télécharger le PDF de confirmation"
-                                                >
-                                                    <i className="bi bi-file-earmark-pdf me-2"></i>
-                                                    Télécharger PDF
-                                                </button>
-                                            ) : (
-                                                <button 
-                                                    className="btn btn-secondary btn-sm w-100" 
-                                                    disabled
-                                                    title="Disponible après acceptation de la réservation"
-                                                >
-                                                    <i className="bi bi-file-earmark-pdf me-2"></i>
-                                                    Télécharger PDF
-                                                </button>
-                                            )
-                                        )}
-                                        {showAcceptReject && booking.state === 'PENDING_ACCEPT' && (
-                                            <>
-                                                <button 
-                                                    className="btn btn-success btn-sm w-100"
-                                                    onClick={() => handleAccept(booking)}
-                                                    title="Accepter la réservation"
-                                                >
-                                                    <i className="bi bi-check-lg me-2"></i>
-                                                    Accepter
-                                                </button>
-                                                <button 
-                                                    className="btn btn-danger btn-sm w-100"
-                                                    onClick={() => handleReject(booking)}
-                                                    title="Refuser la réservation"
-                                                >
-                                                    <i className="bi bi-x-lg me-2"></i>
-                                                    Refuser
-                                                </button>
-                                            </>
-                                        )}
-                                        {showCancel && (
-                                            <button 
-                                                className="btn btn-danger btn-sm w-100"
-                                                onClick={() => handleCancel(booking)}
-                                                title="Annuler la réservation"
-                                            >
-                                                <i className="bi bi-x-circle me-2"></i>
-                                                Annuler
-                                            </button>
-                                        )}
-                                    </div>
+                                    {renderActionButtons(booking)}
                                 </td>
                             )}
                         </tr>

@@ -1,6 +1,10 @@
 :root{
     --header-height: 82px;
     --footer-height: 100px;
+    @media screen and (max-width: 768px) {
+        --footer-height: 170px;
+    }
+
 }
 
 .hero-fullscreen-height {

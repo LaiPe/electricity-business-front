@@ -15,6 +15,19 @@ function Bookings() {
     const [bookingsAsStationOwner, setBookingsAsStationOwner] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Détecter si on est sur mobile
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 991);
+        };
+        
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     const loadBookings = async () => {
         setLoading(true);
         
@@ -64,24 +77,36 @@ function Bookings() {
 
     return (
         <div>
-            <div className="d-flex justify-content-between align-items-center mb-2">
-                <h2 className='mb-0'>Mes Réservations</h2>
-                <div className="btn-group">
+            <div className='d-flex justify-content-between align-items-start mb-4 gap-3'>
+                <div className="d-flex flex-column">
+                    <h2 className='mb-2'>Mes Réservations</h2>
+                    <div>
+                        <ToggleSwitch
+                            leftLabel="Mes véhicules"
+                            rightLabel="Mes bornes"
+                            leftValue="vehicleOwner"
+                            rightValue="stationOwner"
+                            value={toggleViewState}
+                            onChange={handleToggleView}
+                        />
+                    </div> 
+                </div>
+                <div className={` ${isMobile ? 'btn-group-vertical' : 'btn-group'}`}>
                     {toggleViewState === 'vehicleOwner' ? (
                         <>
                             <button type="button" className="btn btn-outline-primary">
-                                <i className="bi bi-plus-lg me-1"></i>
-                                Nouvelle réservation
+                                <i className={`bi bi-plus-lg ${isMobile ? '' : 'me-1'}`}></i>
+                                { !isMobile && "Nouvelle réservation" }
                             </button>
                             <button type="button" className="btn btn-outline-primary" onClick={handleRefreshBookings}>
-                                <i className="bi bi-arrow-clockwise me-1"></i>
-                                Rafraîchir
+                                <i className={`bi bi-arrow-clockwise ${isMobile ? '' : 'me-1'}`}></i>
+                                { !isMobile && "Rafraîchir" }
                             </button>
                         </>
                     ) : (
                         <button type="button" className="btn btn-outline-primary" onClick={handleRefreshBookings}>
-                            <i className="bi bi-arrow-clockwise me-1"></i>
-                            Rafraîchir
+                            <i className={`bi bi-arrow-clockwise ${isMobile ? '' : 'me-1'}`}></i>
+                            { !isMobile && "Rafraîchir" }
                         </button>
                     )}
                     <button 
@@ -99,22 +124,10 @@ function Bookings() {
                                 Exporter mes réservations au format Excel (xlsx)
                             </a>
                         </li>
-                    </ul>
-                    
+                    </ul>   
                 </div>
             </div>
             
-            <div className="mb-4">
-                <ToggleSwitch
-                    leftLabel="Mes véhicules"
-                    rightLabel="Mes bornes"
-                    leftValue="vehicleOwner"
-                    rightValue="stationOwner"
-                    value={toggleViewState}
-                    onChange={handleToggleView}
-                />
-            </div> 
-
             {loading ? (
                 <div className="d-flex justify-content-center align-items-center" style={{minHeight: '300px'}}>
                     <Spinner />

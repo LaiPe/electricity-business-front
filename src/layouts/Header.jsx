@@ -11,7 +11,7 @@ function Header() {
     };
 
     return (
-        <header className='navbar navbar-expand-lg bg-body-tertiary sticky-top'>
+        <header className='navbar navbar-expand-lg bg-body-tertiary sticky-top' style={{minHeight: "var(--header-height)"}}>
             <div className='container-fluid'>
                 <NavLink to="/" className='navbar-brand'>
                     <h1>Electricity Business</h1>
