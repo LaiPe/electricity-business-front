@@ -44,7 +44,7 @@ function DashboardLayout({ children }) {
     }
 
     return (
-        <div className={`dashboard-layout d-flex ${isMobile ? 'flex-column-reverse' : 'flex-row'} hero-fullscreen-height-minus-footer`}>
+        <div className={`dashboard-layout d-flex ${isMobile ? 'flex-column-reverse hero-fullscreen-height' : 'flex-row hero-fullscreen-height hero-fullscreen-height-minus-footer'} `}>
             <aside className={sidebarClass} style={sidebarStyle}>
                 <div className={`px-2 py-3 ${isMobile ? 'py-2' : ''}`}>
                     {!isMobile && (
