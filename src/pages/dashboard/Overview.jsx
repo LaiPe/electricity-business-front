@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useApiCall } from '../../hooks/useApiCall';
 import { getBookingsAsVehicleOwner, getBookingsAsStationOwner } from '../../services/BookingService';
@@ -46,10 +47,10 @@ function Overview() {
 
     // Extraire toutes les stations des places
     const stations = places.flatMap(place => 
-        (place.stations || []).map(station => ({
+        (place.charging_stations || []).map(station => ({
             ...station,
             placeName: place.name,
-            address: place.address
+            placeDescription: place.description
         }))
     );
 
@@ -88,10 +89,16 @@ function Overview() {
                         {/* Liste des véhicules */}
                         <div className="card flex-grow-1" style={{ maxHeight: '50%' }}>
                             <div className="card-header d-flex justify-content-between align-items-center">
-                                <h6 className="mb-0">
-                                    <i className="bi bi-car-front me-2"></i>
-                                    Mes véhicules
-                                </h6>
+                                <div className="d-flex align-items-center gap-3">
+                                    <h6 className="mb-0">
+                                        <i className="bi bi-car-front me-2"></i>
+                                        Mes véhicules
+                                    </h6>
+                                    <Link to="/dashboard/vehicles" className="text-primary text-decoration-none small">
+                                        <i className="bi bi-box-arrow-up-right me-1"></i>
+                                        Gérer
+                                    </Link>
+                                </div>
                                 <span className="badge bg-primary">{vehicles.length}</span>
                             </div>
                             <div className="card-body overflow-auto p-0">
@@ -105,14 +112,14 @@ function Overview() {
                                         {vehicles.map(vehicle => (
                                             <li key={vehicle.id} className="list-group-item d-flex justify-content-between align-items-center">
                                                 <div>
-                                                    <strong>{vehicle.brand} {vehicle.model}</strong>
-                                                    {vehicle.license_plate && (
-                                                        <small className="text-muted d-block">{vehicle.license_plate}</small>
+                                                    <strong>{vehicle.vehicle_model?.make} {vehicle.vehicle_model?.model}</strong>
+                                                    {vehicle.registration_number && (
+                                                        <small className="text-muted d-block">{vehicle.registration_number}</small>
                                                     )}
                                                 </div>
-                                                {vehicle.battery_capacity_kwh && (
+                                                {vehicle.vehicle_model?.battery_capacity_kwh && (
                                                     <span className="badge bg-secondary">
-                                                        {vehicle.battery_capacity_kwh} kWh
+                                                        {vehicle.vehicle_model.battery_capacity_kwh} kWh
                                                     </span>
                                                 )}
                                             </li>
@@ -125,10 +132,16 @@ function Overview() {
                         {/* Liste des bornes */}
                         <div className="card flex-grow-1" style={{ maxHeight: '50%' }}>
                             <div className="card-header d-flex justify-content-between align-items-center">
-                                <h6 className="mb-0">
-                                    <i className="bi bi-ev-station me-2"></i>
-                                    Mes bornes
-                                </h6>
+                                <div className="d-flex align-items-center gap-3">
+                                    <h6 className="mb-0">
+                                        <i className="bi bi-ev-station me-2"></i>
+                                        Mes bornes
+                                    </h6>
+                                    <Link to="/dashboard/stations" className="text-primary text-decoration-none small">
+                                        <i className="bi bi-box-arrow-up-right me-1"></i>
+                                        Gérer
+                                    </Link>
+                                </div>
                                 <span className="badge bg-success">{stations.length}</span>
                             </div>
                             <div className="card-body overflow-auto p-0">
@@ -141,15 +154,15 @@ function Overview() {
                                     <ul className="list-group list-group-flush">
                                         {stations.map(station => (
                                             <li key={station.id} className="list-group-item d-flex justify-content-between align-items-center">
-                                                <div>
+                                                <div className="flex-grow-1">
                                                     <strong>{station.name}</strong>
                                                     <small className="text-muted d-block">
-                                                        {station.placeName}{station.address ? ` - ${station.address}` : ''}
+                                                        {station.placeName}
+                                                    </small>
+                                                    <small className="text-muted d-block">
+                                                        {station.power_kw} kW - {station.price_per_kwh}€/kWh
                                                     </small>
                                                 </div>
-                                                <span className={`badge ${station.is_available ? 'bg-success' : 'bg-secondary'}`}>
-                                                    {station.is_available ? 'Disponible' : 'Indisponible'}
-                                                </span>
                                             </li>
                                         ))}
                                     </ul>
