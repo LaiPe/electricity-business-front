@@ -59,7 +59,7 @@ function DashboardLayout({ children }) {
                     )}
                     
                     <nav>
-                        <ul className={`nav ${isMobile ? 'flex-row justify-content-around' : 'flex-column'} ${isCollapsed && !isMobile ? 'align-items-center' : ''} ${isMobile ? 'gap-1' : 'gap-3 ms-2'}`}>
+                        <ul className={`nav ${isMobile ? 'flex-row justify-content-around' : 'flex-column'} ${isCollapsed ? 'align-items-center' : 'ms-2'} ${isMobile ? 'gap-1' : 'gap-3 '}`}>
                             <li className="nav-item" style={{width:"fit-content"}}>
                                 <NavLink to="/dashboard" className={`nav-link d-flex ${isMobile ? 'flex-column' : 'flex-row'} p-0 align-items-center`} title="Vue d'ensemble">
                                     <i className={`bi bi-speedometer2 ${isCollapsed || isMobile ? '' : 'me-2'} ${isMobile ? 'fs-5' : ''}`}></i>
