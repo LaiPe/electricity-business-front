@@ -62,7 +62,7 @@ function Overview() {
     }
 
     return (
-        <div className="hero-fullscreen-strict-height-minus-footer">
+        <div className="h-100">
             <div className="row h-100 g-4">
                 {/* Calendrier à gauche */}
                 <div className="col-lg-7 col-xl-8 h-100">
