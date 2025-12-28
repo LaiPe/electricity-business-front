@@ -184,6 +184,7 @@ function AsStationOwnerBookingList() {
                         <GenericBookingTable 
                             bookings={bookings?.accepted} 
                             showPdfDownload
+                            showCancel
                         />
                     </div>
                 )}

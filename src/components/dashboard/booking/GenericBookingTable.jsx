@@ -158,8 +158,7 @@ function GenericBookingTable({
                                 <th scope="col">Propriétaire de la borne</th>
                                 <th scope="col">Borne</th>
                                 {showStatus && <th scope="col">Statut</th>}
-                                {showPdfDownload && <th scope="col">Confirmation</th>}
-                                {hasActions && <th scope="col">Actions</th>}
+                                {hasAnyActionColumn && <th scope="col"></th>}
                             </>
                         ) : (
                             <>
@@ -168,8 +167,7 @@ function GenericBookingTable({
                                 <th scope="col">Propriétaire du véhicule</th>
                                 <th scope="col">Véhicule</th>
                                 {showStatus && <th scope="col">Statut</th>}
-                                {showPdfDownload && <th scope="col">Confirmation</th>}
-                                {hasActions && <th scope="col">Actions</th>}
+                                {hasAnyActionColumn && <th scope="col"></th>}
                             </>
                         )}
                     </tr>
@@ -270,60 +268,58 @@ function GenericBookingTable({
                                     </span>
                                 </td>
                             )}
-                            {showPdfDownload && (
+                            {hasAnyActionColumn && (
                                 <td>
-                                    {(booking.state === 'ACCEPTED' || booking.state === 'ONGOING' || booking.state === 'COMPLETED') ? (
-                                        <button 
-                                            className="btn btn-primary btn-sm"
-                                            onClick={() => handleDownloadPDF(booking)}
-                                            title="Télécharger le PDF de confirmation"
-                                        >
-                                            <i className="bi bi-file-earmark-pdf"></i>
-                                        </button>
-                                    ) : (
-                                        <span 
-                                            className="d-inline-block" 
-                                            title="Disponible après acceptation de la réservation"
-                                        >
-                                            <button 
-                                                className="btn btn-secondary btn-sm" 
-                                                disabled
-                                                style={{ pointerEvents: 'none' }}
-                                            >
-                                                <i className="bi bi-file-earmark-pdf"></i>
-                                            </button>
-                                        </span>
-                                    )}
-                                </td>
-                            )}
-                            {hasActions && (
-                                <td>
-                                    <div className="d-flex align-items-center justify-content-center gap-2">
+                                    <div className="d-flex flex-column align-items-center gap-2">
+                                        {showPdfDownload && (
+                                            (booking.state === 'ACCEPTED' || booking.state === 'ONGOING' || booking.state === 'COMPLETED') ? (
+                                                <button 
+                                                    className="btn btn-primary btn-sm w-100"
+                                                    onClick={() => handleDownloadPDF(booking)}
+                                                    title="Télécharger le PDF de confirmation"
+                                                >
+                                                    <i className="bi bi-file-earmark-pdf me-2"></i>
+                                                    Télécharger PDF
+                                                </button>
+                                            ) : (
+                                                <button 
+                                                    className="btn btn-secondary btn-sm w-100" 
+                                                    disabled
+                                                    title="Disponible après acceptation de la réservation"
+                                                >
+                                                    <i className="bi bi-file-earmark-pdf me-2"></i>
+                                                    Télécharger PDF
+                                                </button>
+                                            )
+                                        )}
                                         {showAcceptReject && booking.state === 'PENDING_ACCEPT' && (
                                             <>
                                                 <button 
-                                                    className="btn btn-success btn-sm"
+                                                    className="btn btn-success btn-sm w-100"
                                                     onClick={() => handleAccept(booking)}
                                                     title="Accepter la réservation"
                                                 >
-                                                    <i className="bi bi-check-lg"></i>
+                                                    <i className="bi bi-check-lg me-2"></i>
+                                                    Accepter
                                                 </button>
                                                 <button 
-                                                    className="btn btn-danger btn-sm"
+                                                    className="btn btn-danger btn-sm w-100"
                                                     onClick={() => handleReject(booking)}
                                                     title="Refuser la réservation"
                                                 >
-                                                    <i className="bi bi-x-lg"></i>
+                                                    <i className="bi bi-x-lg me-2"></i>
+                                                    Refuser
                                                 </button>
                                             </>
                                         )}
                                         {showCancel && (
                                             <button 
-                                                className="btn btn-danger btn-sm"
+                                                className="btn btn-danger btn-sm w-100"
                                                 onClick={() => handleCancel(booking)}
                                                 title="Annuler la réservation"
                                             >
-                                                <i className="bi bi-x-circle"></i>
+                                                <i className="bi bi-x-circle me-2"></i>
+                                                Annuler
                                             </button>
                                         )}
                                     </div>
