@@ -38,7 +38,7 @@ function Search() {
 
     // Si la géolocalisation n'est pas encore disponible, afficher le spinner
     if (!userLocation) {
-        return <Spinner />;
+        return <main className="hero-fullscreen-height"><Spinner /></main>;
     }
 
     return (

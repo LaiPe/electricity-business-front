@@ -9,6 +9,7 @@ import Register from './pages/auth/Register.jsx';
 import Login from './pages/auth/Login.jsx';
 import Verify from './pages/auth/Verify.jsx';
 import Home from './pages/Home.jsx';
+import Search from './pages/Search.jsx';
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 import TermsOfService from './pages/TermsOfService.jsx';
 import BannedPage from './pages/navigation/BannedPage.jsx';
@@ -24,7 +25,7 @@ import { GlobalErrorProvider } from './contexts/GlobalErrorContext.jsx';
 import RouteGuard from './RouteGuard.jsx';
 
 import Spinner from './components/spinner/Spinner.jsx';
-import Search from './pages/Search.jsx';
+
 
 
 const router = createBrowserRouter([
