@@ -245,18 +245,15 @@ function Search() {
     };
 
     // Gestion de la réservation
-    const handleClickBooking = () => {
-        if (!selectedStation) return;
+    const handleClickBooking = (station) => {
+        const toBeBookedStation = station || selectedStation;
+        if (!toBeBookedStation) return;
 
         if (isAuthenticated) {
+            console.log('Navigating to booking with station:', toBeBookedStation);
             navigate(`/booking/create`, {
                 state: {
-                    station: selectedStation,
-                    searchParams: formData,
-                    coordinates: {
-                        latitude: selectedStation.latitude,
-                        longitude: selectedStation.longitude
-                    }
+                    station: toBeBookedStation
                 }
             });
         } else {
@@ -441,20 +438,20 @@ function Search() {
                                                     📍 Cliquez pour voir sur la carte
                                                 </small>
                                             </div>
-                                            <div className="mt-2">
+                                            <div className="mt-2" style={{ position: 'relative', zIndex: 2, pointerEvents: 'none' }}>
                                                 <button
                                                     className="btn btn-primary btn-sm w-100"
-                                                    disabled={!isFormComplete}
+                                                    style={{ pointerEvents: 'auto' }}
+                                                    disabled={!isFormComplete || !isFormSubmitted || isLoading}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setSelectedStation(station);
-                                                        handleClickBooking();
+                                                        handleClickBooking(station);
                                                     }}
                                                 >
                                                     Réserver cette borne
                                                 </button>
-                                                {!isFormComplete && (
-                                                    <small className="text-muted d-block mt-1">
+                                                {(!isFormComplete || !isFormSubmitted) && (
+                                                    <small className="text-muted d-block mt-1" style={{ pointerEvents: 'auto' }}>
                                                         <i className="bi bi-exclamation-circle-fill me-1"></i>
                                                         Veuillez remplir le formulaire complet pour réserver
                                                     </small>
