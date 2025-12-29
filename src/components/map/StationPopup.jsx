@@ -1,69 +1,11 @@
-import { useState, useEffect } from 'react';
 import { Popup } from 'react-map-gl/maplibre';
-import { getShortAddress } from '../../services/GeoService';
+import { useStationAddress } from '../../hooks/useStationAddress';
 
 /**
  * Composant pour afficher le popup d'une station avec enrichissement d'adresse
  */
 function StationPopup({ station, onClose, onBooking }) {
-    const [enrichedStation, setEnrichedStation] = useState(station);
-    const [isLoadingAddress, setIsLoadingAddress] = useState(false);
-
-    // Fonction pour enrichir les stations avec des adresses
-    const enrichStationsWithAddresses = async (stations) => {
-        const enrichmentPromises = stations.map(async (station) => {
-            try {
-                // Timeout de 3 secondes par requête
-                const timeoutPromise = new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Timeout')), 3000)
-                );
-                
-                const addressPromise = getShortAddress(station.latitude, station.longitude);
-                const address = await Promise.race([addressPromise, timeoutPromise]);
-                
-                return { ...station, address };
-            } catch (error) {
-                return { ...station, address: null };
-            }
-        });
-
-        // Timeout global de 3 secondes pour toutes les requêtes
-        const globalTimeout = new Promise((resolve) => {
-            setTimeout(() => {
-                resolve(stations.map(station => ({ ...station, address: null })));
-            }, 3000);
-        });
-
-        try {
-            return await Promise.race([
-                Promise.all(enrichmentPromises),
-                globalTimeout
-            ]);
-        } catch (error) {
-            // En cas d'erreur, retourner les stations avec address: null
-            return stations.map(station => ({ ...station, address: null }));
-        }
-    };
-
-    useEffect(() => {
-        const enrichStation = async () => {
-            if (!station.address) {
-                setIsLoadingAddress(true);
-                try {
-                    const enrichedStations = await enrichStationsWithAddresses([station]);
-                    if (enrichedStations && enrichedStations.length > 0) {
-                        setEnrichedStation(enrichedStations[0]);
-                    }
-                } catch (error) {
-                    console.error('Erreur lors de l\'enrichissement:', error);
-                } finally {
-                    setIsLoadingAddress(false);
-                }
-            }
-        };
-
-        enrichStation();
-    }, [station]);
+    const { enrichedStation, isLoadingAddress } = useStationAddress(station);
 
     return (
         <Popup

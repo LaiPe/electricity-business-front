@@ -1,21 +1,47 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Map } from "react-map-gl/maplibre";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useGeolocation } from "../hooks/useGeolocation";
 import useViewport from "../hooks/useViewport";
 import Spinner from "../components/spinner/Spinner";
 import Input from "../components/form/Input";
 import Button from "../components/form/Button";
+import StationMarker from "../components/map/StationMarker";
+import StationPopup from "../components/map/StationPopup";
+import ZoomControl from "../components/map/ZoomControl";
+import ClusterMarker from "../components/map/ClusterMarker";
+import { getNearbyStations, getFreeNearbyStations } from "../services/StationService";
+import { geocodeAddress } from "../services/GeoService";
+import { calculateVisibleRadius, debounce, createStationBoundsFilter, calculatePixelDistance } from "../utils/MapUtils";
+import { useAuth } from "../contexts/AuthContext";
 
 function Search() {
     const mapRef = useRef(null);
-    const [isMapLoaded, setIsMapLoaded] = useState(false);
+    const location = useLocation();
+    const navigate = useNavigate();
     const { userLocation } = useGeolocation();
     const { isMobile } = useViewport();
+    const { isAuthenticated } = useAuth();
+    
+    // États pour les stations
+    const [stations, setStations] = useState([]);
+    const [clusters, setClusters] = useState([]);
+    const [individualStations, setIndividualStations] = useState([]);
+    const [selectedStation, setSelectedStation] = useState(null);
+    const [isMapLoaded, setIsMapLoaded] = useState(false);
+    
+    // États pour la recherche
+    const [isLoading, setIsLoading] = useState(false);
+    const [searchError, setSearchError] = useState(null);
+    const [isFormSubmitted, setIsFormSubmitted] = useState(false);
+
+    // État initial passé via navigation (station présélectionnée, coordonnées, etc.)
+    const initialState = location.state || null;
 
     const [formData, setFormData] = useState({
-        address: '',
-        date: '',
-        duration: '60', // 1 heure par défaut
+        address: initialState?.address || '',
+        date: initialState?.date || '',
+        duration: initialState?.duration || '60',
     });
 
     const handleInputChange = (e) => {
@@ -24,17 +50,288 @@ function Search() {
             ...prevData,
             [name]: value,
         }));
+        // Réinitialiser le statut de soumission si l'utilisateur modifie le formulaire
+        if (isFormSubmitted) {
+            setIsFormSubmitted(false);
+        }
     };
 
-    const handleSubmit = (e) => {
+    // Fonction pour formater une date locale en ISO sans conversion UTC
+    const toLocalISOString = (date) => {
+        const pad = (n) => n.toString().padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    };
+
+    // Date minimale pour l'input datetime-local (maintenant)
+    const getMinDateTime = () => {
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, '0');
+        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    };
+
+    // Fonction pour merger les résultats de recherche sans doublons
+    const mergeSearchResults = (prevResults, newStations) => {
+        if (!prevResults || prevResults.length === 0) {
+            return newStations;
+        }
+        
+        const newStationIds = new Set(newStations.map(station => station.id));
+        const keptStations = prevResults.filter(station => newStationIds.has(station.id));
+        const existingIds = new Set(keptStations.map(station => station.id));
+        const uniqueNewStations = newStations.filter(station => !existingIds.has(station.id));
+        
+        return [...keptStations, ...uniqueNewStations];
+    };
+
+    // Fonction pour créer des clusters
+    const createClusters = (stationsList) => {
+        if (!mapRef.current || stationsList.length === 0) {
+            return { clusters: [], individualStations: stationsList };
+        }
+
+        const clusterDistancePixels = 50;
+        const clustersResult = [];
+        const processedStations = new Set();
+        const individualStationsResult = [];
+
+        stationsList.forEach((station, index) => {
+            if (processedStations.has(index)) return;
+
+            const nearbyStations = [station];
+            processedStations.add(index);
+
+            stationsList.forEach((otherStation, otherIndex) => {
+                if (processedStations.has(otherIndex) || index === otherIndex) return;
+
+                const pixelDistance = calculatePixelDistance(
+                    station.latitude, station.longitude,
+                    otherStation.latitude, otherStation.longitude,
+                    mapRef
+                );
+
+                if (pixelDistance < clusterDistancePixels) {
+                    nearbyStations.push(otherStation);
+                    processedStations.add(otherIndex);
+                }
+            });
+
+            if (nearbyStations.length > 1) {
+                const avgLat = nearbyStations.reduce((sum, s) => sum + s.latitude, 0) / nearbyStations.length;
+                const avgLng = nearbyStations.reduce((sum, s) => sum + s.longitude, 0) / nearbyStations.length;
+
+                clustersResult.push({
+                    id: `cluster_${clustersResult.length}`,
+                    latitude: avgLat,
+                    longitude: avgLng,
+                    stations: nearbyStations,
+                    count: nearbyStations.length
+                });
+            } else {
+                individualStationsResult.push(station);
+            }
+        });
+
+        return { clusters: clustersResult, individualStations: individualStationsResult };
+    };
+
+    // Fonction pour récupérer les stations filtrées
+    const getFilteredStations = async (lat, lng, radius, useFormFilter = false) => {
+        let stationsResult;
+
+        if (useFormFilter && formData.date) {
+            // Si formulaire soumis avec une date, utiliser getFreeNearbyStations
+            const searchStart = new Date(formData.date);
+            const searchEnd = new Date(searchStart.getTime() + parseInt(formData.duration) * 60000);
+            
+            // Formater en ISO local (sans conversion UTC)
+            const searchStartLocal = toLocalISOString(searchStart);
+            const searchEndLocal = toLocalISOString(searchEnd);
+            console.log('Recherche des bornes libres entre', searchStartLocal, 'et', searchEndLocal);
+            
+            stationsResult = await getFreeNearbyStations(
+                parseFloat(lat.toFixed(8)),
+                parseFloat(lng.toFixed(8)),
+                Math.ceil(radius),
+                searchStartLocal,
+                searchEndLocal
+            );
+        } else {
+            // Sinon, utiliser getNearbyStations pour toutes les bornes
+            stationsResult = await getNearbyStations(
+                parseFloat(lat.toFixed(8)),
+                parseFloat(lng.toFixed(8)),
+                Math.ceil(radius)
+            );
+        }
+        
+        // Filtrer les stations pour ne garder que celles dans les limites visibles
+        const boundsFilter = createStationBoundsFilter(mapRef);
+        return stationsResult.filter(boundsFilter);
+    };
+
+    // Fonction pour mettre à jour les stations visibles selon la carte
+    const updateVisibleStations = useCallback(async () => {
+        if (!mapRef.current) return;
+        
+        setIsLoading(true);
+        setSearchError(null);
+
+        const center = mapRef.current.getCenter();
+        const radius = calculateVisibleRadius(mapRef);
+        
+        console.log('Mise à jour des stations:', {
+            centre: { lat: center.lat, lng: center.lng },
+            rayon: radius + 'km',
+            filtreFormulaire: isFormSubmitted
+        });
+
+        if (radius > 1000) {
+            setIsLoading(false);
+            return;
+        }
+        
+        try {
+            const filteredStations = await getFilteredStations(center.lat, center.lng, radius, isFormSubmitted);
+            
+            // Vérifier si la station sélectionnée est toujours dans les résultats
+            if (selectedStation && !filteredStations.find(station => station.id === selectedStation.id)) {
+                setSelectedStation(null);
+            }
+            
+            setStations(prevResults => {
+                const mergedResults = mergeSearchResults(prevResults, filteredStations);
+                const { clusters: newClusters, individualStations: newIndividual } = createClusters(mergedResults);
+                setClusters(newClusters);
+                setIndividualStations(newIndividual);
+                return mergedResults;
+            });
+
+            if (filteredStations.length === 0 && isFormSubmitted) {
+                setSearchError("Aucune borne disponible trouvée pour ces critères.");
+            }
+        } catch (error) {
+            console.error('Erreur lors de la mise à jour des stations:', error);
+            setSearchError('Erreur lors de la mise à jour des stations');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [selectedStation, isFormSubmitted, formData.date, formData.duration]);
+
+    // Debouncer la fonction pour éviter trop d'appels API
+    const debouncedUpdateStations = useCallback(
+        debounce(updateVisibleStations, 500),
+        [updateVisibleStations]
+    );
+
+    // Gestion du mouvement de la carte
+    const handleMapMovement = () => {
+        // Recalculer les clusters quand la carte bouge ou zoome
+        if (stations.length > 0) {
+            const { clusters: newClusters, individualStations: newIndividual } = createClusters(stations);
+            setClusters(newClusters);
+            setIndividualStations(newIndividual);
+        }
+        
+        debouncedUpdateStations();
+    };
+
+    // Gestion du clic sur un cluster
+    const handleClusterClick = (cluster) => {
+        if (!mapRef.current) return;
+        
+        const currentZoom = mapRef.current.getZoom();
+        const newZoom = Math.min(currentZoom + 3, 18);
+        
+        mapRef.current.flyTo({
+            center: [cluster.longitude, cluster.latitude],
+            zoom: newZoom,
+            duration: 1000
+        });
+    };
+
+    // Gestion de la réservation
+    const handleClickBooking = () => {
+        if (!selectedStation) return;
+
+        if (isAuthenticated) {
+            navigate(`/booking/create`, {
+                state: {
+                    station: selectedStation,
+                    searchParams: formData,
+                    coordinates: {
+                        latitude: selectedStation.latitude,
+                        longitude: selectedStation.longitude
+                    }
+                }
+            });
+        } else {
+            navigate('/login');
+        }
+    };
+
+    // Soumission du formulaire
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Recherche avec:', formData);
-        // TODO: Implémenter la logique de recherche des stations
+        setIsLoading(true);
+        setSearchError(null);
+        setStations([]);
+        setClusters([]);
+        setIndividualStations([]);
+        setSelectedStation(null);
+        setIsFormSubmitted(true);
+
+        try {
+            // Géocoder l'adresse pour obtenir les coordonnées
+            const { latitude, longitude } = await geocodeAddress(formData.address);
+
+            // Centrer la carte sur les coordonnées recherchées
+            if (mapRef.current) {
+                mapRef.current.flyTo({
+                    center: [longitude, latitude],
+                    zoom: 12,
+                    duration: 1500
+                });
+            }
+
+            // La mise à jour des stations sera déclenchée par handleMapMovement après le flyTo
+        } catch (error) {
+            console.error('Erreur lors de la recherche:', error);
+            setSearchError(error.message || "Erreur lors de la recherche des bornes. Veuillez réessayer.");
+            setIsLoading(false);
+        }
     };
 
-    const handleMapMovement = (event) => {
-        // Gérer les mouvements de la carte si nécessaire
-    };
+    // Effet pour charger les stations initiales quand la carte et la géolocalisation sont prêtes
+    useEffect(() => {
+        if (isMapLoaded && userLocation) {
+            console.log('Chargement initial des stations...');
+            
+            // Si un état initial avec une station est passé, la sélectionner
+            if (initialState?.station) {
+                setSelectedStation(initialState.station);
+                
+                // Centrer la carte sur la station présélectionnée
+                if (mapRef.current && initialState.station.latitude && initialState.station.longitude) {
+                    mapRef.current.flyTo({
+                        center: [initialState.station.longitude, initialState.station.latitude],
+                        zoom: 15,
+                        duration: 1000
+                    });
+                }
+            }
+            
+            // Si des coordonnées initiales sont passées, centrer la carte
+            if (initialState?.coordinates && mapRef.current) {
+                mapRef.current.flyTo({
+                    center: [initialState.coordinates.longitude, initialState.coordinates.latitude],
+                    zoom: initialState.zoom || 12,
+                    duration: 1000
+                });
+            }
+            
+            updateVisibleStations();
+        }
+    }, [isMapLoaded, userLocation]);
 
     // Si la géolocalisation n'est pas encore disponible, afficher le spinner
     if (!userLocation) {
@@ -46,7 +343,7 @@ function Search() {
             <div className="stations d-flex flex-column align-items-center" style={{width: "50%"}}>
                 <div 
                     className="search-form-container w-100 p-4 pb-0 mb-4" 
-                    style={{backgroundColor: '#ffffff', position: 'sticky', top: 'var(--header-height)'}}
+                    style={{backgroundColor: '#ffffff', position: 'sticky', top: 'var(--header-height)', zIndex: 10}}
                 >
                     <form 
                         className="search-form p-4 w-100 d-flex gap-3 align-items-end justify-content-between border rounded" 
@@ -73,6 +370,7 @@ function Search() {
                             value={formData.date}
                             onChange={handleInputChange}
                             wrapperClassName=""
+                            min={getMinDateTime()}
                             required
                         />
                         <Input
@@ -92,40 +390,96 @@ function Search() {
                             wrapperClassName=""
                             required
                         />
-                        <Button type="submit" style={{minWidth: '140px'}}>🔍 Rechercher</Button>
+                        <Button type="submit" style={{minWidth: '140px'}} disabled={isLoading}>
+                            {isLoading ? '🔄 Recherche...' : '🔍 Rechercher'}
+                        </Button>
                     </form>
                 </div>
-                <div className="stations-list w-100 px-4">
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptatibus modi hic veritatis quod labore maiores voluptas itaque eius fuga tenetur tempora, voluptatem at ea exercitationem esse illo soluta? Voluptatibus, numquam.
-                    Omnis deserunt ipsum voluptas a nobis tenetur magnam architecto corrupti quam quasi, incidunt dolores harum, voluptatibus, nostrum necessitatibus sunt quidem ducimus! Nemo deserunt soluta mollitia praesentium, id suscipit omnis perspiciatis!
-                    Quia ea odio animi repellat temporibus eum fuga, voluptas voluptatum voluptatibus asperiores officia quasi, rerum doloremque facere repellendus nam soluta corrupti esse tempora, tempore praesentium ipsum! Perspiciatis illum temporibus consequuntur.
-                    Harum dolore quos voluptate. Tempore aut modi error rem expedita quidem, laborum repellendus neque obcaecati odio eos quam nobis libero adipisci at ad harum nesciunt ipsa? Aut, voluptatum corrupti. Minus.
-                    Voluptatibus in culpa consequuntur quidem est quaerat sit ex, inventore eveniet molestias quasi temporibus id, blanditiis dicta aliquam adipisci perspiciatis et laudantium maiores nulla commodi nihil! Fugiat labore cumque iusto?
-                    Libero molestias veritatis expedita corporis laudantium sequi iste quae obcaecati, est reprehenderit commodi mollitia ut, quas id facilis numquam nulla. Fugiat ducimus autem itaque a quisquam voluptatibus perferendis alias reprehenderit.
-                    Dolorem eveniet, laboriosam est at nisi corrupti expedita? Quod soluta debitis suscipit animi. Consequatur repellat dicta, neque modi minus totam nam quas velit tenetur dolorem quam, quae, tempore sit necessitatibus!
-                    Blanditiis veritatis autem inventore, doloribus facere odit fugit? Dolores voluptatem earum repellendus, eum voluptates repellat ut corrupti cumque velit culpa quisquam in est obcaecati. Cumque minus rem asperiores deserunt nam.
-                    Inventore error impedit quo porro eum dicta placeat sit recusandae rerum velit cumque voluptates, possimus adipisci delectus esse, assumenda repudiandae perspiciatis aliquam voluptas. Saepe ad tenetur, amet culpa maxime aspernatur.
-                    Inventore id voluptatem omnis libero sapiente porro, perspiciatis maxime aspernatur voluptatum similique quas ut est ipsum voluptatibus ipsa excepturi quos. Alias vitae explicabo eius quidem ullam facilis molestiae autem cum.
-                    Perspiciatis magni, inventore exercitationem voluptate aut doloribus aspernatur cum, fugiat nemo tenetur, incidunt necessitatibus vero facilis voluptatem. Corrupti omnis similique nesciunt tempore voluptatibus neque id eum quidem! Illum, deleniti vitae.
-                    Commodi odit laborum distinctio dolorum, numquam dolorem voluptate, debitis tenetur cumque nobis, minima enim esse deserunt quo provident fugit ea dolores a officia aut qui ullam consequuntur. Est, delectus dolorum?
-                    Fugit iusto, eveniet placeat non iste facilis ratione accusamus quam in dolores vel modi quaerat beatae, debitis consectetur aut dicta eligendi nemo a nam? Vel magni incidunt soluta possimus neque!
-                    Adipisci, atque optio. Fugit saepe adipisci unde. Accusamus odio assumenda laboriosam ab voluptate quasi quae optio sit ipsum corporis in, laborum quas voluptas rerum provident. Ratione cumque nulla corrupti exercitationem.
-                    Beatae quidem ipsa explicabo placeat officiis ducimus doloribus, eveniet aliquid repudiandae soluta praesentium, quia hic. Beatae quae qui ipsam, sunt vitae sequi quas libero facilis incidunt. Eum similique corrupti repellat?
-                    Dolorum, iste asperiores. Voluptates adipisci vitae deserunt totam quo dolor ducimus? Quo hic aut quod commodi autem nam ipsa fugit? Eligendi architecto asperiores repellendus consectetur vel temporibus. Distinctio, laudantium totam?
-                    Laborum laboriosam dolorem porro nobis ipsam quibusdam, assumenda nam, delectus optio error alias cumque quae repudiandae deleniti culpa veniam molestiae quam placeat! Illo quia minus necessitatibus quisquam, velit amet corporis.
-                    Modi obcaecati ipsum cupiditate, accusantium iusto totam velit placeat id quasi aspernatur, rem eveniet incidunt ducimus voluptatem voluptatum nobis vel eos omnis eaque illo est suscipit laboriosam. Nam, sed nulla.
-                    Consectetur minima tenetur nam nihil perspiciatis ducimus, quas reiciendis totam, amet magni autem nulla necessitatibus fugit eligendi pariatur, nostrum harum adipisci culpa aperiam voluptates facere quasi suscipit doloribus. Harum, molestiae?
-                    Quia, suscipit nam deleniti eos dolore consequuntur cupiditate vitae. Nihil possimus voluptatum earum, et dignissimos laboriosam ipsam commodi rem tempore delectus numquam eius fugiat enim architecto temporibus, omnis illo nam.
-                    Dolorem officiis nemo autem cum consequuntur nesciunt ipsam! Magnam laboriosam provident repellendus earum, illo ducimus corporis dolor explicabo veritatis eaque. Eius nesciunt facere laboriosam numquam esse fugit est exercitationem quisquam?
-                    Porro voluptatem officia deserunt alias ut odio eveniet magni fugiat cumque, unde nulla consectetur ex maxime repellat mollitia iste tempora vitae odit aut vel provident, ducimus quis eum numquam. Autem?
-                    Aut ea sunt temporibus eaque, recusandae ratione nam alias quod corrupti non voluptatem sint quas ipsa minus deserunt. Officiis, earum assumenda? Illo doloremque dolores beatae ullam quod atque quis! Ut.
-                    Atque nisi, culpa reiciendis, a quibusdam corporis velit doloremque facilis ratione, reprehenderit deleniti quae officia quo magni temporibus nulla fugiat quos eius eos est. Vero aliquid nisi odio corporis! Provident.
-                    Inventore eligendi numquam ratione fuga commodi nobis nisi, sapiente eum facilis omnis voluptatibus illum mollitia ullam aut facere ut officia, molestias culpa praesentium vero. Velit inventore cum ex hic adipisci!
-                    Dolorem molestias exercitationem culpa totam repellendus fugit itaque similique provident velit maiores quae nulla mollitia et minus eius temporibus eaque voluptates aliquid dolorum, quos laboriosam. Quisquam iure necessitatibus consequuntur fuga?
-                    Repudiandae, corporis? Possimus itaque earum fuga sunt veritatis delectus at quos eum quas, aperiam placeat. Debitis, veniam. Voluptatibus iusto unde labore in? Laudantium harum repellendus, ducimus tempore nemo blanditiis doloremque?
-                    Eius quae numquam voluptates quas fugit ab assumenda magnam veritatis sint quod id, error, nobis harum, culpa libero. Pariatur sed repellat aspernatur obcaecati harum aut neque fuga fugiat nostrum temporibus!
-                    Doloribus, praesentium eum. Laudantium, iste? Enim delectus temporibus modi itaque eum nihil ut, impedit laborum voluptatibus id quae at consectetur obcaecati libero est aut nemo voluptate voluptas, vero iusto. Veniam.
-                    Ad iure ratione dignissimos repudiandae. Illum harum consectetur incidunt minima vitae qui, ullam accusantium cumque ea delectus tenetur quo reprehenderit, voluptates laudantium officiis quod reiciendis possimus voluptas dolorem veniam dolores.
+                <div className="stations-list w-100 px-4" style={{overflowY: 'auto', maxHeight: 'calc(100vh - var(--header-height) - 200px)'}}>
+                    {/* Indicateur de mode de recherche */}
+                    {isFormSubmitted && formData.date && (
+                        <div className="alert alert-info py-2 mb-3" role="alert">
+                            <small>
+                                🔍 Bornes disponibles le {new Date(formData.date).toLocaleDateString('fr-FR')} à {new Date(formData.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} pendant {parseInt(formData.duration) >= 60 ? `${parseInt(formData.duration) / 60}h` : `${formData.duration}min`}
+                            </small>
+                        </div>
+                    )}
+                    
+                    {searchError && (
+                        <div className="alert alert-warning" role="alert">
+                            {searchError}
+                        </div>
+                    )}
+                    
+                    {isLoading && stations.length === 0 && (
+                        <div className="text-center py-4">
+                            <Spinner />
+                            <p className="text-muted mt-2">Recherche des bornes...</p>
+                        </div>
+                    )}
+                    
+                    {stations.length > 0 && (
+                        <div className="mb-3">
+                            <h5 className="mb-3">
+                                {stations.length} borne{stations.length > 1 ? 's' : ''} {isFormSubmitted ? 'disponible' : 'trouvée'}{stations.length > 1 ? 's' : ''}
+                                {isLoading && <span className="spinner-border spinner-border-sm ms-2" role="status"></span>}
+                            </h5>
+                            <div className="list-group">
+                                {stations.map((station) => (
+                                    <div 
+                                        key={station.id}
+                                        className={`list-group-item list-group-item-action`}
+                                        style={{ cursor: 'pointer' }}
+                                        onClick={() => {
+                                            setSelectedStation(station);
+                                            if (mapRef.current) {
+                                                mapRef.current.flyTo({
+                                                    center: [station.longitude, station.latitude],
+                                                    zoom: 15,
+                                                    duration: 1000
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <div className="d-flex w-100 justify-content-between align-items-center">
+                                            <h6 className="mb-1 fw-bold">⚡ {station.name}</h6>
+                                            {station.price_per_kwh && (
+                                                <small className="text-success fw-bold">
+                                                    {station.price_per_kwh}€/kWh
+                                                </small>
+                                            )}
+                                        </div>
+                                        <div className="d-flex justify-content-between align-items-end">
+                                            <div>
+                                                {station.power_kw && (
+                                                    <p className="mb-1">
+                                                        <small className="text-muted">
+                                                            Puissance: {station.power_kw} kW
+                                                        </small>
+                                                    </p>
+                                                )}
+                                                <small className="text-muted">
+                                                    📍 Cliquez pour voir sur la carte
+                                                </small>
+                                            </div>
+                                            <div className="mt-2">
+                                                <button
+                                                    className="btn btn-primary btn-sm w-100"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedStation(station);
+                                                        handleClickBooking();
+                                                    }}
+                                                >
+                                                    Réserver cette borne
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
             <div 
@@ -147,7 +501,37 @@ function Search() {
                         onMove={handleMapMovement}
                         onZoom={handleMapMovement}
                         onLoad={() => setIsMapLoaded(true)}
-                    >
+                    >   
+                        {/* Marqueurs pour les clusters */}
+                        {clusters.map((cluster) => (
+                            <ClusterMarker
+                                key={cluster.id}
+                                cluster={cluster}
+                                onClusterClick={handleClusterClick}
+                            />
+                        ))}
+
+                        {/* Marqueurs des stations individuelles */}
+                        {individualStations.map((station) => (
+                            <StationMarker
+                                key={station.id}
+                                station={station}
+                                onMarkerClick={(clickedStation) => setSelectedStation(clickedStation)}
+                            />
+                        ))}
+
+                        {/* Popup de la station sélectionnée */}
+                        {selectedStation && (
+                            <StationPopup
+                                station={selectedStation}
+                                onClose={() => setSelectedStation(null)}
+                                onBooking={handleClickBooking}
+                            />
+                        )}
+
+                        {/* Contrôles de zoom */}
+                        <ZoomControl />
+                        
                     </Map>
                 </div>
                
