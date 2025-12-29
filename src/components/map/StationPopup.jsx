@@ -4,7 +4,7 @@ import { useStationAddress } from '../../hooks/useStationAddress';
 /**
  * Composant pour afficher le popup d'une station avec enrichissement d'adresse
  */
-function StationPopup({ station, onClose, onBooking }) {
+function StationPopup({ station, onClose, onBooking, disabledBooking = false }) {
     const { enrichedStation, isLoadingAddress } = useStationAddress(station);
 
     return (
@@ -50,6 +50,7 @@ function StationPopup({ station, onClose, onBooking }) {
                 )}
                 <button 
                     className="btn btn-primary btn-sm w-100"
+                    disabled={disabledBooking}
                     onClick={onBooking}
                 >
                     Réserver

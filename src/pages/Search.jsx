@@ -315,6 +315,9 @@ function Search() {
         }
     };
 
+    // Vérifier si le formulaire est complètement rempli
+    const isFormComplete = formData.address && formData.date && formData.duration;
+
     // Effet pour charger les stations initiales quand la carte et la géolocalisation sont prêtes
     useEffect(() => {
         if (isMapLoaded && userLocation) {
@@ -441,6 +444,7 @@ function Search() {
                                             <div className="mt-2">
                                                 <button
                                                     className="btn btn-primary btn-sm w-100"
+                                                    disabled={!isFormComplete}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setSelectedStation(station);
@@ -449,6 +453,12 @@ function Search() {
                                                 >
                                                     Réserver cette borne
                                                 </button>
+                                                {!isFormComplete && (
+                                                    <small className="text-muted d-block mt-1">
+                                                        <i className="bi bi-exclamation-circle-fill me-1"></i>
+                                                        Veuillez remplir le formulaire complet pour réserver
+                                                    </small>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -508,6 +518,7 @@ function Search() {
                                 station={selectedStation}
                                 onClose={() => setSelectedStation(null)}
                                 onBooking={handleClickBooking}
+                                disabledBooking={!isFormComplete}
                             />
                         )}
 
