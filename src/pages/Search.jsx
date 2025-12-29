@@ -4,8 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useGeolocation } from "../hooks/useGeolocation";
 import useViewport from "../hooks/useViewport";
 import Spinner from "../components/spinner/Spinner";
-import Input from "../components/form/Input";
-import Button from "../components/form/Button";
+import SearchForm from "../components/search/SearchForm";
 import StationMarker from "../components/map/StationMarker";
 import StationPopup from "../components/map/StationPopup";
 import ZoomControl from "../components/map/ZoomControl";
@@ -60,13 +59,6 @@ function Search() {
     const toLocalISOString = (date) => {
         const pad = (n) => n.toString().padStart(2, '0');
         return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-    };
-
-    // Date minimale pour l'input datetime-local (maintenant)
-    const getMinDateTime = () => {
-        const now = new Date();
-        const pad = (n) => n.toString().padStart(2, '0');
-        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
     };
 
     // Fonction pour merger les résultats de recherche sans doublons
@@ -135,11 +127,11 @@ function Search() {
     };
 
     // Fonction pour récupérer les stations filtrées
-    const getFilteredStations = async (lat, lng, radius, useFormFilter = false) => {
+    const getFilteredStations = async (lat, lng, radius) => {
         let stationsResult;
 
-        if (useFormFilter && formData.date) {
-            // Si formulaire soumis avec une date, utiliser getFreeNearbyStations
+        // Si la date est remplie dans le formulaire, utiliser getFreeNearbyStations
+        if (formData.date) {
             const searchStart = new Date(formData.date);
             const searchEnd = new Date(searchStart.getTime() + parseInt(formData.duration) * 60000);
             
@@ -157,6 +149,7 @@ function Search() {
             );
         } else {
             // Sinon, utiliser getNearbyStations pour toutes les bornes
+            console.log('Recherche de toutes les bornes à proximité');
             stationsResult = await getNearbyStations(
                 parseFloat(lat.toFixed(8)),
                 parseFloat(lng.toFixed(8)),
@@ -191,7 +184,7 @@ function Search() {
         }
         
         try {
-            const filteredStations = await getFilteredStations(center.lat, center.lng, radius, isFormSubmitted);
+            const filteredStations = await getFilteredStations(center.lat, center.lng, radius);
             
             // Vérifier si la station sélectionnée est toujours dans les résultats
             if (selectedStation && !filteredStations.find(station => station.id === selectedStation.id)) {
@@ -207,7 +200,9 @@ function Search() {
             });
 
             if (filteredStations.length === 0 && isFormSubmitted) {
-                setSearchError("Aucune borne disponible trouvée pour ces critères.");
+                setSearchError(formData.date ? 
+                    "Aucune borne disponible trouvée pour ces critères de date et durée." : 
+                    "Aucune borne trouvée dans cette zone.");
             }
         } catch (error) {
             console.error('Erreur lors de la mise à jour des stations:', error);
@@ -274,9 +269,6 @@ function Search() {
         e.preventDefault();
         setIsLoading(true);
         setSearchError(null);
-        setStations([]);
-        setClusters([]);
-        setIndividualStations([]);
         setSelectedStation(null);
         setIsFormSubmitted(true);
 
@@ -291,13 +283,35 @@ function Search() {
                     zoom: 12,
                     duration: 1500
                 });
+
+                // Si mobile, scroller en haut pour voir la carte
+                if (isMobile) {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
             }
+            
 
             // La mise à jour des stations sera déclenchée par handleMapMovement après le flyTo
         } catch (error) {
             console.error('Erreur lors de la recherche:', error);
             setSearchError(error.message || "Erreur lors de la recherche des bornes. Veuillez réessayer.");
             setIsLoading(false);
+        }
+    };
+
+    // Réinitialiser le formulaire et relancer la requête sans filtre
+    const handleReset = async (e) => {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        // Remettre le formulaire à l'état vide
+        setFormData({ address: '', date: '', duration: '60' });
+        setIsFormSubmitted(false);
+        setSearchError(null);
+        setSelectedStation(null);
+        updateVisibleStations();
+
+        // Si mobile, scroller en haut pour voir la carte
+        if (isMobile) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
@@ -339,63 +353,22 @@ function Search() {
     }
 
     return (
-        <main className="search-page d-flex hero-fullscreen-height">
-            <div className="stations d-flex flex-column align-items-center" style={{width: "50%"}}>
+        <main className={`search-page d-flex ${isMobile ? 'flex-column-reverse' : ''} hero-fullscreen-height`}>
+            <div className="stations d-flex flex-column align-items-center" style={{width: isMobile ? "100%" : "50%", backgroundColor: '#ffffff', zIndex: 2}}>
                 <div 
                     className="search-form-container w-100 p-4 pb-0 mb-4" 
                     style={{backgroundColor: '#ffffff', position: 'sticky', top: 'var(--header-height)', zIndex: 10}}
                 >
-                    <form 
-                        className="search-form p-4 w-100 d-flex gap-3 align-items-end justify-content-between border rounded" 
-                        style={{backgroundColor: '#f8f9fa', zIndex: 10, width: 'calc(100% - 32px)'}}
+                    <SearchForm
+                        formData={formData}
+                        onInputChange={handleInputChange}
                         onSubmit={handleSubmit}
-                    >
-                        <Input
-                            id="search-address"
-                            name="address"
-                            type="text"
-                            label="📍 Adresse ou ville" 
-                            placeholder="Ex: Paris, Lyon, Marseille..."
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            wrapperClassName=""
-                            style={{minWidth: '300px'}}
-                            required
-                        />
-                        <Input
-                            id="search-date"
-                            name="date"
-                            type="datetime-local"
-                            label="📅 Date"
-                            value={formData.date}
-                            onChange={handleInputChange}
-                            wrapperClassName=""
-                            min={getMinDateTime()}
-                            required
-                        />
-                        <Input
-                            id="search-duration"
-                            name="duration"
-                            type="select"
-                            label="⏱️ Durée"
-                            options={[
-                                { value: '30', label: '30 minutes' },
-                                { value: '60', label: '1 heure' },
-                                { value: '120', label: '2 heures' },
-                                { value: '240', label: '4 heures' },
-                                { value: '480', label: '8 heures' },
-                            ]}
-                            value={formData.duration}
-                            onChange={handleInputChange}
-                            wrapperClassName=""
-                            required
-                        />
-                        <Button type="submit" style={{minWidth: '140px'}} disabled={isLoading}>
-                            {isLoading ? '🔄 Recherche...' : '🔍 Rechercher'}
-                        </Button>
-                    </form>
+                        onReset={handleReset}
+                        isLoading={isLoading}
+                        isFormSubmitted={isFormSubmitted}
+                    />
                 </div>
-                <div className="stations-list w-100 px-4" style={{overflowY: 'auto', maxHeight: 'calc(100vh - var(--header-height) - 200px)'}}>
+                <div className="stations-list w-100 px-4 mb-4" style={{zIndex: isMobile ? 5 : undefined}}>
                     {/* Indicateur de mode de recherche */}
                     {isFormSubmitted && formData.date && (
                         <div className="alert alert-info py-2 mb-3" role="alert">
@@ -413,7 +386,7 @@ function Search() {
                     
                     {isLoading && stations.length === 0 && (
                         <div className="text-center py-4">
-                            <Spinner />
+                            <span className="spinner-border spinner-border-sm ms-2" role="status"></span>
                             <p className="text-muted mt-2">Recherche des bornes...</p>
                         </div>
                     )}
@@ -438,6 +411,9 @@ function Search() {
                                                     zoom: 15,
                                                     duration: 1000
                                                 });
+                                            }
+                                            if (isMobile) {
+                                                window.scrollTo({ top: 0, behavior: 'smooth' });
                                             }
                                         }}
                                     >
@@ -483,8 +459,14 @@ function Search() {
                 </div>
             </div>
             <div 
-                className="map-container hero-fullscreen-strict-height py-4 pe-4" 
-                style={{width: "50%", position: 'sticky', top: 'var(--header-height)'}}
+                className={`map-container ${isMobile ? '' : 'py-4 pe-4 hero-fullscreen-strict-height'}`} 
+                style={
+                    isMobile 
+                    ? 
+                        {width: "100%", height: '58vh', position: 'sticky', top: 'var(--header-height)'} 
+                    : 
+                        {width: "50%", position: 'sticky', top: 'var(--header-height)'}
+                }
             >
                 <div className="border rounded-3 h-100 position-relative" style={{overflow: 'hidden'}}>
                     <Map
@@ -530,7 +512,7 @@ function Search() {
                         )}
 
                         {/* Contrôles de zoom */}
-                        <ZoomControl />
+                        { !isMobile && <ZoomControl />}
                         
                     </Map>
                 </div>
