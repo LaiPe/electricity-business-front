@@ -1,5 +1,6 @@
 import Input from "../form/Input";
 import Button from "../form/Button";
+import { formatDate } from "../../utils/DateUtils";
 
 /**
  * Formulaire de recherche de bornes avec filtres de date et durée
@@ -15,8 +16,7 @@ function SearchForm({
     // Date minimale pour l'input datetime-local (maintenant)
     const getMinDateTime = () => {
         const now = new Date();
-        const pad = (n) => n.toString().padStart(2, '0');
-        return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        return formatDate(now).slice(0, 16); // Format 'YYYY-MM-DDTHH:MM'
     };
 
     return (

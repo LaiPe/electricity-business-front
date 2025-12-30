@@ -25,6 +25,7 @@ import { GlobalErrorProvider } from './contexts/GlobalErrorContext.jsx';
 import RouteGuard from './RouteGuard.jsx';
 
 import Spinner from './components/spinner/Spinner.jsx';
+import BookingCreate from './pages/BookingCreate.jsx';
 
 
 
@@ -73,6 +74,10 @@ const router = createBrowserRouter([
       {
         path: '/search',
         element: <Search />
+      },
+      {
+        path: '/booking/create',
+        element: <BookingCreate />
       },
       {
         path: '/dashboard',

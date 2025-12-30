@@ -1,4 +1,5 @@
 import { apiRequest } from "../utils/ApiRequest";
+import { formatDate } from "../utils/DateUtils";
 
 export const getNearbyStations = async (latitude, longitude, radiusInKm) => {
     const params = new URLSearchParams({
@@ -11,14 +12,6 @@ export const getNearbyStations = async (latitude, longitude, radiusInKm) => {
 }
 
 export const getFreeNearbyStations = async (latitude, longitude, radiusInKm, searchStart, searchEnd) => {
-    // Supporte les objets Date ou les strings ISO
-    const formatDate = (date) => {
-        if (typeof date === 'string') return date;
-        // Si c'est un objet Date, formater en ISO local (sans conversion UTC)
-        const pad = (n) => n.toString().padStart(2, '0');
-        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-    };
-
     const params = new URLSearchParams({
         latitude: latitude.toString(),
         longitude: longitude.toString(),

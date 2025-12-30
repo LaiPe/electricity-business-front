@@ -29,9 +29,13 @@ export function useApiCall() {
         } catch (err) {
             console.error('Erreur lors de l\'appel API:', err);
             setError(err);
-            
-            // Vérifier le statut d'authentification en cas d'erreur
-            const isAuthenticated = await checkAuthStatus();
+
+            let isAuthenticated = false;
+
+            // Vérifier le statut d'authentification en cas d'erreur 403
+            if (err.cause === 403) {
+                isAuthenticated = await checkAuthStatus();
+            }
             
             // Afficher l'erreur globale seulement si l'utilisateur reste authentifié
             // Les erreurs d'authentification sont déjà gérées par AuthContext 

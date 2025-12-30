@@ -13,6 +13,7 @@ import { getNearbyStations, getFreeNearbyStations } from "../services/StationSer
 import { geocodeAddress } from "../services/GeoService";
 import { calculateVisibleRadius, debounce, createStationBoundsFilter, calculatePixelDistance } from "../utils/MapUtils";
 import { useAuth } from "../contexts/AuthContext";
+import { formatDate } from "../utils/DateUtils";
 
 function Search() {
     const mapRef = useRef(null);
@@ -54,12 +55,7 @@ function Search() {
             setIsFormSubmitted(false);
         }
     };
-
-    // Fonction pour formater une date locale en ISO sans conversion UTC
-    const toLocalISOString = (date) => {
-        const pad = (n) => n.toString().padStart(2, '0');
-        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-    };
+    
 
     // Fonction pour merger les résultats de recherche sans doublons
     const mergeSearchResults = (prevResults, newStations) => {
@@ -136,8 +132,8 @@ function Search() {
             const searchEnd = new Date(searchStart.getTime() + parseInt(formData.duration) * 60000);
             
             // Formater en ISO local (sans conversion UTC)
-            const searchStartLocal = toLocalISOString(searchStart);
-            const searchEndLocal = toLocalISOString(searchEnd);
+            const searchStartLocal = formatDate(searchStart);
+            const searchEndLocal = formatDate(searchEnd);
             console.log('Recherche des bornes libres entre', searchStartLocal, 'et', searchEndLocal);
             
             stationsResult = await getFreeNearbyStations(
@@ -251,9 +247,17 @@ function Search() {
 
         if (isAuthenticated) {
             console.log('Navigating to booking with station:', toBeBookedStation);
+            const searchStart = new Date(formData.date);
+            const searchEnd = new Date(searchStart.getTime() + parseInt(formData.duration) * 60000);
+            
             navigate(`/booking/create`, {
                 state: {
-                    station: toBeBookedStation
+                    station: toBeBookedStation,
+                    booking: {
+                        startDate: formatDate(searchStart),
+                        endDate: formatDate(searchEnd)
+                    },
+                    formData: formData
                 }
             });
         } else {
@@ -514,7 +518,10 @@ function Search() {
                             <StationPopup
                                 station={selectedStation}
                                 onClose={() => setSelectedStation(null)}
-                                onBooking={handleClickBooking}
+                                onBooking={(e) => {
+                                    e.stopPropagation();
+                                    handleClickBooking(selectedStation);
+                                }}
                                 disabledBooking={!isFormComplete}
                             />
                         )}
