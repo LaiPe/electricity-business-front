@@ -35,7 +35,6 @@ function SearchForm({
                 onChange={onInputChange}
                 wrapperClassName=""
                 style={{minWidth: '300px'}}
-                required
             />
             <Input
                 id="search-date"

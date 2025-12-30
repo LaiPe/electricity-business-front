@@ -273,6 +273,12 @@ function Search() {
         setSelectedStation(null);
         setIsFormSubmitted(true);
 
+        if (!formData.address) {
+            updateVisibleStations();
+            setIsLoading(false);
+            return;
+        }
+
         try {
             // Géocoder l'adresse pour obtenir les coordonnées
             const { latitude, longitude } = await geocodeAddress(formData.address);
@@ -316,8 +322,9 @@ function Search() {
         }
     };
 
-    // Vérifier si le formulaire est complètement rempli
-    const isFormComplete = formData.address && formData.date && formData.duration;
+    // Vérifier si le formulaire est rempli
+    const isFormReadyToBook = formData.date && formData.duration;
+
 
     // Effet pour charger les stations initiales quand la carte et la géolocalisation sont prêtes
     useEffect(() => {
@@ -446,7 +453,7 @@ function Search() {
                                                 <button
                                                     className="btn btn-primary btn-sm w-100"
                                                     style={{ pointerEvents: 'auto' }}
-                                                    disabled={!isFormComplete || !isFormSubmitted || isLoading}
+                                                    disabled={!isFormReadyToBook || !isFormSubmitted || isLoading}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         handleClickBooking(station);
@@ -454,7 +461,7 @@ function Search() {
                                                 >
                                                     Réserver cette borne
                                                 </button>
-                                                {(!isFormComplete || !isFormSubmitted) && (
+                                                {(!isFormReadyToBook || !isFormSubmitted) && (
                                                     <small className="text-muted d-block mt-1" style={{ pointerEvents: 'auto' }}>
                                                         <i className="bi bi-exclamation-circle-fill me-1"></i>
                                                         Veuillez remplir le formulaire complet pour réserver
@@ -522,7 +529,7 @@ function Search() {
                                     e.stopPropagation();
                                     handleClickBooking(selectedStation);
                                 }}
-                                disabledBooking={!isFormComplete}
+                                disabledBooking={!isFormReadyToBook || !isFormSubmitted || isLoading}
                             />
                         )}
 
