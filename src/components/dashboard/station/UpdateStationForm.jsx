@@ -18,7 +18,6 @@ function UpdateStationForm({ station, place, onClose }) {
     });
 
     const [errors, setErrors] = useState({});
-    
     const { updateItem } = useListDispatchMethodsContext();
 
     // Initialiser le formulaire avec les données de la station
@@ -169,7 +168,7 @@ function UpdateStationForm({ station, place, onClose }) {
                             type="button" 
                             className="btn-close" 
                             onClick={handleCancel}
-                            disabled={isSubmitting}
+                            disabled={loading}
                             aria-label="Close"
                         ></button>
                     </div>
@@ -202,7 +201,7 @@ function UpdateStationForm({ station, place, onClose }) {
                                         required
                                         placeholder="Ex: Borne de recharge Centre-ville"
                                         helpText="Ce nom sera affiché aux utilisateurs pour identifier la station."
-                                        disabled={isSubmitting}
+                                        disabled={loading}
                                         maxLength="100"
                                     />
                                 </div>
@@ -220,7 +219,7 @@ function UpdateStationForm({ station, place, onClose }) {
                                         placeholder="Ex: 0.15"
                                         min="0"
                                         step="0.01"
-                                        disabled={isSubmitting}
+                                        disabled={loading}
                                     />
                                 </div>
 
@@ -238,7 +237,7 @@ function UpdateStationForm({ station, place, onClose }) {
                                         placeholder="Ex: 7"
                                         min="0"
                                         step="0.1"
-                                        disabled={isSubmitting}
+                                        disabled={loading}
                                     />
                                 </div>
                             </div>
@@ -254,7 +253,7 @@ function UpdateStationForm({ station, place, onClose }) {
                                         onCoordinateChange={handleCoordinateChange}
                                         error={errors.coordinates}
                                         required
-                                        disabled={isSubmitting}
+                                        disabled={loading}
                                     />
                                 </div>
 
@@ -271,7 +270,7 @@ function UpdateStationForm({ station, place, onClose }) {
                                         onChange={(e) => handleInputChange('instructions', e.target.value)}
                                         placeholder="Instructions spéciales pour l'utilisation de cette borne..."
                                         rows="3"
-                                        disabled={isSubmitting}
+                                        disabled={loading}
                                         maxLength="500"
                                     />
                                     {errors.instructions && (
@@ -291,14 +290,14 @@ function UpdateStationForm({ station, place, onClose }) {
                                 type="button"
                                 variant="secondary"
                                 onClick={handleCancel}
-                                disabled={isSubmitting}
+                                disabled={loading}
                             >
                                 Annuler
                             </Button>
                             <Button
                                 type="submit"
                                 variant="primary"
-                                loading={isSubmitting}
+                                loading={loading}
                                 loadingText="Mise à jour en cours..."
                             >
                                 <i className="bi bi-check-circle me-2"></i>
