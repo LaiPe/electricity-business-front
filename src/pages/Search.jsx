@@ -462,9 +462,9 @@ function Search() {
                                                     Réserver cette borne
                                                 </button>
                                                 {(!isFormReadyToBook || !isFormSubmitted) && (
-                                                    <small className="text-muted d-block mt-1" style={{ pointerEvents: 'auto' }}>
+                                                    <small className="text-muted d-block mt-1" style={{ pointerEvents: 'auto', maxWidth: '350px' }}>
                                                         <i className="bi bi-exclamation-circle-fill me-1"></i>
-                                                        Veuillez remplir le formulaire complet pour réserver
+                                                        Veuillez remplir le formulaire avec une date et une durée pour réserver.
                                                     </small>
                                                 )}
                                             </div>

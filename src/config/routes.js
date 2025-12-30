@@ -6,8 +6,7 @@ export const PUBLIC_ROUTES = [
     '/login',
     '/register',
     '/privacy-policy',
-    '/terms-of-service',
-    '/search'
+    '/terms-of-service'
 ];
 
 // Routes accessibles aux utilisateurs authentifiés mais non vérifiés
@@ -26,7 +25,9 @@ export const BANNED_USER_ROUTES = [
 export const VERIFIED_USER_ROUTES = [
     '/dashboard*',
     '/profile',
-    '/settings'
+    '/settings',
+    '/search',
+    '/booking/create'
 ];
 
 // Routes protégées par rôle

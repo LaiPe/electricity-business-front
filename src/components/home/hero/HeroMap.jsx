@@ -240,13 +240,9 @@ function HeroMap() {
 
         if (isAuthenticated) {
             // Utilisateur connecté : rediriger vers la page de création de réservation
-            navigate(`/booking/create`, {
+            navigate(`/search`, {
                 state: {
                     station: selectedStation,
-                    coordinates: {
-                        latitude: selectedStation.latitude,
-                        longitude: selectedStation.longitude
-                    }
                 }
             });
         } else {
