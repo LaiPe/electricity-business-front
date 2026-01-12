@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useApiCall } from '../hooks/useApiCall';
 import { addBooking } from '../services/BookingService';
 import { getUserVehicles } from '../services/VehicleService';
+import ChargingEstimate from '../components/booking/ChargingEstimate';
 
 function BookingCreate() {
     const location = useLocation();
@@ -209,6 +210,16 @@ function BookingCreate() {
                                     </select>
                                 )}
                             </div>
+
+                            {/* Estimations */}
+                            {selectedVehicleId && vehicles.length > 0 && (
+                                <ChargingEstimate
+                                    station={station}
+                                    vehicle={vehicles.find(v => v.id.toString() === selectedVehicleId)}
+                                    startDate={booking.startDate}
+                                    endDate={booking.endDate}
+                                />
+                            )}
 
                             <div className="d-grid gap-2">
                                 <button 
