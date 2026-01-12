@@ -9,6 +9,7 @@ import StationMarker from "../components/map/StationMarker";
 import StationPopup from "../components/map/StationPopup";
 import ZoomControl from "../components/map/ZoomControl";
 import ClusterMarker from "../components/map/ClusterMarker";
+import ReviewViewer from "../components/review/ReviewViewer";
 import { getNearbyStations, getFreeNearbyStations } from "../services/StationService";
 import { geocodeAddress } from "../services/GeoService";
 import { calculateVisibleRadius, debounce, createStationBoundsFilter, calculatePixelDistance } from "../utils/MapUtils";
@@ -430,21 +431,22 @@ function Search() {
                                     >
                                         <div className="d-flex w-100 justify-content-between align-items-center">
                                             <h6 className="mb-1 fw-bold">⚡ {station.name}</h6>
-                                            {station.price_per_kwh && (
-                                                <small className="text-success fw-bold">
-                                                    {station.price_per_kwh}€/kWh
-                                                </small>
-                                            )}
-                                        </div>
-                                        <div className="d-flex justify-content-between align-items-end">
                                             <div>
                                                 {station.power_kw && (
-                                                    <p className="mb-1">
-                                                        <small className="text-muted">
-                                                            Puissance: {station.power_kw} kW
-                                                        </small>
-                                                    </p>
+                                                    <span className="badge bg-secondary me-2">
+                                                        {station.power_kw} kW
+                                                    </span>
                                                 )}
+                                                {station.price_per_kwh && (
+                                                    <small className="text-success fw-bold">
+                                                        {station.price_per_kwh}€/kWh
+                                                    </small>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="d-flex justify-content-between align-items-end">
+                                            <div className="d-flex flex-column gap-2">
+                                                <ReviewViewer station={station} />
                                                 <small className="text-muted">
                                                     📍 Cliquez pour voir sur la carte
                                                 </small>
