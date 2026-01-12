@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useApiCall } from '../../../hooks/useApiCall';
-import { reviewBooking } from '../../../services/BookingService';
+import { reviewBooking as reviewBookingApi } from '../../../services/BookingService';
 import { useBookingsDispatchMethodsContext } from '../../../contexts/BookingsContext';
 
 /**
@@ -43,7 +43,7 @@ function AddReviewForm({ bookingId }) {
             review_comment: comment
         };
 
-        await execute(() => reviewBooking(bookingId, reviewData), {
+        await execute(() => reviewBookingApi(bookingId, reviewData), {
             onSuccess: () => {
                 handleCloseModal();
                 reviewBooking({ id: bookingId, ...reviewData });
