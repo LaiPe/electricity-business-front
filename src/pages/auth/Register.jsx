@@ -19,6 +19,7 @@ function Register() {
     const [firstNameError, setFirstNameError] = useState('');
     const [lastNameError, setLastNameError] = useState('');
     const [birthdateError, setBirthdateError] = useState('');
+    const [rgpdAccepted, setRgpdAccepted] = useState(false);
     
     const { register } = useAuth();
     const navigate = useNavigate();
@@ -212,11 +213,26 @@ function Register() {
                             required
                             disabled={isSubmitting}
                         />
+
+                        <div className="form-check mb-3">
+                            <input
+                                type="checkbox"
+                                className="form-check-input"
+                                id="rgpd"
+                                checked={rgpdAccepted}
+                                onChange={(e) => setRgpdAccepted(e.target.checked)}
+                                required
+                                disabled={isSubmitting}
+                            />
+                            <label className="form-check-label" htmlFor="rgpd">
+                                J'accepte la <Link to="/privacy-policy" target="_blank" className="link-primary">politique de confidentialité</Link> et le traitement de mes données personnelles conformément au RGPD.
+                            </label>
+                        </div>
                         
                         <Button
                             type="submit"
                             className="w-100 mb-3"
-                            disabled={usernameError || passwordError || emailError || firstNameError || lastNameError || birthdateError}
+                            disabled={usernameError || passwordError || emailError || firstNameError || lastNameError || birthdateError || !rgpdAccepted}
                             loading={isSubmitting}
                             loadingText="Inscription en cours..."
                         >
