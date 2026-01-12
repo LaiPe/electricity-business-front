@@ -34,6 +34,15 @@ function VehicleOwnerBookingsReducer(state, action) {
                 upcoming: state.upcoming.filter(booking => booking.id !== action.payload.id),
                 cancelled: [...state.cancelled, { ...action.payload, state: 'CANCELLED' }]
             };
+        case 'REVIEW_BOOKING':
+            return {
+                ...state,
+                past: state.past.map(booking => 
+                    booking.id === action.payload.id 
+                    ? { ...booking, review_grade: action.payload.review_grade, review_comment: action.payload.review_comment } 
+                    : booking
+                )
+            };
         default:
             return state;
     }
@@ -114,7 +123,8 @@ export function BookingsProvider({ initialBookings, asVehicleOwner, asStationOwn
     const dispatchMethods = useMemo(() => {
         if (asVehicleOwner) {
             return {
-                cancelBooking: (booking) => dispatch({ type: 'CANCEL_BOOKING', payload: booking })
+                cancelBooking: (booking) => dispatch({ type: 'CANCEL_BOOKING', payload: booking }),
+                reviewBooking: (booking) => dispatch({ type: 'REVIEW_BOOKING', payload: booking })
             };
         } else if (asStationOwner) {
             return {

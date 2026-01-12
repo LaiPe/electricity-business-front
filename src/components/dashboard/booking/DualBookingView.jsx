@@ -150,6 +150,9 @@ function UnifiedBookingList({ asVehicleOwner, asStationOwner, initialDateFilter 
             if (activeTab === 'upcoming') {
                 return <GenericBookingTable bookings={filteredBookings} {...commonProps} showCancel showPdfDownload />;
             }
+            if (activeTab === 'past') {
+                return <GenericBookingTable bookings={filteredBookings} isVehicleOwnerView showReview showPdfDownload />;
+            }
             return <GenericBookingTable bookings={filteredBookings} {...commonProps} />;
         }
 
@@ -161,7 +164,7 @@ function UnifiedBookingList({ asVehicleOwner, asStationOwner, initialDateFilter 
             return <GenericBookingTable bookings={filteredBookings} showPdfDownload showCancel />;
         }
         if (activeTab === 'past') {
-            return <GenericBookingTable bookings={filteredBookings} showPdfDownload />;
+            return <GenericBookingTable bookings={filteredBookings} showReview showPdfDownload />;
         }
         return <GenericBookingTable bookings={filteredBookings} />;
     };

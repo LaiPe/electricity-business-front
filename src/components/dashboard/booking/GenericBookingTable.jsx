@@ -9,6 +9,7 @@ import {
 } from '../../../services/BookingService';
 import { useApiCall } from '../../../hooks/useApiCall';
 import StationLocationModal from './StationLocationModal';
+import AddReviewForm from './AddReviewForm';
 
 const STATUS_LABELS = {
     PENDING_ACCEPT: { label: 'En attente', className: 'bg-warning text-dark' },
@@ -29,6 +30,7 @@ const STATUS_LABELS = {
  * @param {boolean} props.showPdfDownload - Afficher le bouton de téléchargement PDF
  * @param {boolean} props.showLocateStation - Afficher le bouton de localisation de la borne
  * @param {boolean} props.showStatus - Afficher le statut de la réservation
+ * @param {boolean} props.showReview - Afficher la colonne des avis
  * @param {boolean} props.isVehicleOwnerView - Vue propriétaire de véhicule (ordre des colonnes différent)
  */
 function GenericBookingTable({ 
@@ -38,6 +40,7 @@ function GenericBookingTable({
     showPdfDownload = false,
     showLocateStation = false,
     showStatus = false,
+    showReview = false,
     isVehicleOwnerView = false
 }) {
     const { execute } = useApiCall();
@@ -337,6 +340,7 @@ function GenericBookingTable({
                                 <th scope="col">Date et durée</th>
                                 <th scope="col">Propriétaire de la borne</th>
                                 <th scope="col">Borne</th>
+                                {showReview && <th scope="col">Avis</th>}
                                 {showStatus && <th scope="col">Statut</th>}
                                 {hasAnyActionColumn && <th scope="col"></th>}
                             </>
@@ -346,6 +350,7 @@ function GenericBookingTable({
                                 <th scope="col">Date et durée</th>
                                 <th scope="col">Propriétaire du véhicule</th>
                                 <th scope="col">Véhicule</th>
+                                {showReview && <th scope="col">Avis</th>}
                                 {showStatus && <th scope="col">Statut</th>}
                                 {hasAnyActionColumn && <th scope="col"></th>}
                             </>
@@ -394,6 +399,18 @@ function GenericBookingTable({
                                             )}
                                         </div>
                                     </td>
+                                    {showReview && (
+                                        <td>
+                                            {booking.review_grade ? (
+                                                <div>
+                                                    <strong>Avis :</strong> {booking.review_grade} / 5<br />
+                                                    <em>"{booking.review_comment}"</em>
+                                                </div>
+                                            ) : (
+                                                <AddReviewForm bookingId={booking.id} />
+                                            )}
+                                        </td>
+                                    )}
                                 </>
                             ) : (
                                 <>
@@ -439,8 +456,21 @@ function GenericBookingTable({
                                             <code className="text-primary">{booking.vehicle?.registration_number || 'Non disponible'}</code>
                                         </small>
                                     </td>
+                                    {showReview && (
+                                        <td>
+                                            {booking.review_grade ? (
+                                                <div>
+                                                    <strong>Avis :</strong> {booking.review_grade} / 5<br />
+                                                    <em>"{booking.review_comment}"</em>
+                                                </div>
+                                            ) : (
+                                                <span className="text-muted">Pas encore d'avis</span>
+                                            )}
+                                        </td>
+                                    )}
                                 </>
                             )}
+                            
                             {showStatus && (
                                 <td>
                                     <span className={`badge ${status.className}`}>
